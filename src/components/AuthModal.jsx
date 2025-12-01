@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Logo from './Logo';
 import authBg from '../assets/auth-bg-new.jpg';
 
-const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
+const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) => {
     const [mode, setMode] = useState(initialMode);
     const [formData, setFormData] = useState({ username: '', email: '', password: '' });
     const [error, setError] = useState('');
@@ -41,10 +41,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             if (response.ok) {
                 setSuccess(mode === 'login' ? 'Login successful!' : 'Registration successful! Please login.');
                 if (mode === 'register') {
+                    // Automatically log in after register or switch to login?
+                    // For now, let's just switch to login as per previous logic
                     setTimeout(() => setMode('login'), 1500);
                 } else {
-                    // Handle login success (save token, etc.)
+                    // Handle login success
                     console.log('Token:', data.token);
+                    if (onLoginSuccess) {
+                        // Combine user data with token if needed, or just pass user object
+                        // The backend returns { token: "...", user: { ... } }
+                        onLoginSuccess(data.user);
+                    }
                     setTimeout(onClose, 1500);
                 }
             } else {
@@ -120,7 +127,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
-                                required={mode === 'register'} // Email usually required for register, maybe not for login if using username
+                                required
                             />
                         </div>
 
