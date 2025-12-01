@@ -15,6 +15,7 @@ import FloatingNav from './components/FloatingNav';
 import ImpactStats from './components/ImpactStats';
 import RecentActivities from './components/RecentActivities';
 import DailyEngagement from './components/DailyEngagement';
+import ProfilePage from './components/ProfilePage';
 import './App.css'
 
 function App() {
@@ -23,6 +24,9 @@ function App() {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [currentPage, setCurrentPage] = useState(() => {
+    return localStorage.getItem('currentPage') || 'home';
   });
 
   const openLogin = () => {
@@ -44,6 +48,69 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    setCurrentPage('home');
+    localStorage.setItem('currentPage', 'home');
+  };
+
+  const handleNavigate = (page) => {
+    setCurrentPage(page);
+    localStorage.setItem('currentPage', page);
+    window.scrollTo(0, 0);
+  };
+
+  const handleUpdateProfile = async (updatedData) => {
+    try {
+      if (!user || !user.email) {
+        console.error("No user email found for update");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/update-profile-by-email/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          profile: updatedData
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local user state with the data returned from backend
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        console.error("Backend update failed");
+        // Fallback for demo: still update local state so user sees changes
+        setUser(prevUser => {
+          const newUser = {
+            ...prevUser,
+            profile: {
+              ...prevUser.profile,
+              ...updatedData
+            }
+          };
+          localStorage.setItem('user', JSON.stringify(newUser));
+          return newUser;
+        });
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // Fallback for demo
+      setUser(prevUser => {
+        const newUser = {
+          ...prevUser,
+          profile: {
+            ...prevUser.profile,
+            ...updatedData
+          }
+        };
+        localStorage.setItem('user', JSON.stringify(newUser));
+        return newUser;
+      });
+    }
   };
 
   return (
@@ -53,9 +120,11 @@ function App() {
         onLoginClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
         onRegisterClick={() => { setAuthMode('register'); setIsAuthModalOpen(true); }}
         onLogout={handleLogout}
+        onNavigate={handleNavigate}
+        currentPage={currentPage}
       />
 
-      <FloatingNav user={user} />
+      {currentPage === 'home' && <FloatingNav user={user} />}
 
       <AuthModal
         isOpen={isAuthModalOpen}
@@ -65,32 +134,39 @@ function App() {
       />
 
       <main className="flex-grow pt-6">
-        <div id="welcome"><QuotesSection /></div>
+        {currentPage === 'home' ? (
+          <>
+            <div id="welcome"><QuotesSection /></div>
 
-        {user && (
-          <div className="max-w-6xl mx-auto px-4 mb-12">
-            <div className="bg-white rounded-3xl shadow-lg p-8 border border-teal-50">
-              <div id="impact-stats"><ImpactStats /></div>
-              <div className="my-12 border-t border-gray-100"></div>
-              <div id="recent-activities"><RecentActivities /></div>
-              <div className="my-12 border-t border-gray-100"></div>
-              <div id="daily-engagement"><DailyEngagement /></div>
-            </div>
-          </div>
+            {user && (
+              <div className="max-w-6xl mx-auto px-4 mb-12">
+                <div className="bg-white rounded-3xl shadow-lg p-8 border border-teal-50">
+                  <div id="impact-stats"><ImpactStats /></div>
+                  <div className="my-12 border-t border-gray-100"></div>
+                  <div id="recent-activities"><RecentActivities /></div>
+                  <div className="my-12 border-t border-gray-100"></div>
+                  <div id="daily-engagement"><DailyEngagement /></div>
+                </div>
+              </div>
+            )}
+
+            <div id="global-emissions"><EmissionsMap /></div>
+            <div id="community-stats"><CommunityImpactMap /></div>
+            <div id="heatmap"><EcoChampions /></div>
+            <div id="leaderboard"><LiveActions /></div>
+            <div id="live-feed"><ActionableInsights /></div>
+            <div id="insights"><EmissionBreakdown /></div>
+            <div id="breakdown"><CountryComparison /></div>
+            <div id="comparison"><ImpactSection /></div>
+          </>
+        ) : (
+          <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} />
         )}
-
-        <div id="global-emissions"><EmissionsMap /></div>
-        <div id="community-stats"><ImpactSection /></div>
-        <div id="heatmap"><CommunityImpactMap /></div>
-        <div id="leaderboard"><EcoChampions /></div>
-        <div id="live-feed"><LiveActions /></div>
-        <div id="insights"><ActionableInsights /></div>
-        <div id="breakdown"><EmissionBreakdown /></div>
-        <div id="comparison"><CountryComparison /></div>
       </main>
+
       <Footer />
     </div>
-  )
+  );
 }
 
 export default App

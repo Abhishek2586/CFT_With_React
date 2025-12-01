@@ -1,22 +1,38 @@
 import { useState } from 'react';
 import Logo from './Logo';
 
-const Header = ({ user, onLoginClick, onRegisterClick, onLogout }) => {
+const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, currentPage }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <header className="bg-teal-500 text-white shadow-md fixed top-0 w-full z-50">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <header className="bg-teal-500 text-white shadow-md fixed top-0 left-0 w-full z-50">
+            {/* Decorative Leaf Icons Container - Clipped */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <i className="fas fa-leaf absolute -left-6 -bottom-8 text-8xl text-teal-600/30 transform -rotate-45"></i>
+                <i className="fas fa-leaf absolute -right-6 -bottom-8 text-8xl text-teal-600/30 transform rotate-45"></i>
+            </div>
+
+            <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center relative z-10">
                 {/* Logo */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate('home')}>
                     <Logo className="w-8 h-8 text-white" />
                     <span className="text-2xl font-bold tracking-tight">ecoTracker</span>
                 </div>
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex space-x-8 items-center">
-                    <a href="#" className="text-white font-bold border-b-2 border-white pb-1">Home</a>
-                    <a href="#" className="hover:text-teal-100 transition-colors font-medium">Profile</a>
+                    <button
+                        onClick={() => onNavigate('home')}
+                        className={`${currentPage === 'home' ? 'font-bold border-b-2 border-white pb-1' : 'hover:text-teal-100 transition-colors font-medium'}`}
+                    >
+                        Home
+                    </button>
+                    <button
+                        onClick={() => onNavigate('profile')}
+                        className={`${currentPage === 'profile' ? 'font-bold border-b-2 border-white pb-1' : 'hover:text-teal-100 transition-colors font-medium'}`}
+                    >
+                        Profile
+                    </button>
                     <a href="#" className="hover:text-teal-100 transition-colors font-medium">Community</a>
                     <a href="#" className="hover:text-teal-100 transition-colors font-medium">Challenges</a>
                 </nav>
@@ -78,12 +94,15 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }) => {
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Signed in as</p>
                                             <p className="text-sm font-bold text-gray-900 truncate">{user.email || user.username}</p>
                                         </div>
-                                        <a href="#" className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors">
-                                            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <button
+                                            onClick={() => onNavigate('profile')}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                                        >
+                                            <svg className="w-4 h-4 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                             </svg>
                                             View Profile
-                                        </a>
+                                        </button>
                                         <button
                                             onClick={onLogout}
                                             className="w-full text-left flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -133,8 +152,8 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }) => {
             {/* Mobile Menu */}
             {isMenuOpen && (
                 <div className="md:hidden bg-teal-600 pb-4 px-4 pt-2 space-y-2 shadow-inner">
-                    <a href="#" className="block py-2 bg-teal-700 rounded px-2 font-bold">Home</a>
-                    <a href="#" className="block py-2 hover:bg-teal-700 rounded px-2">Profile</a>
+                    <button onClick={() => onNavigate('home')} className="block w-full text-left py-2 bg-teal-700 rounded px-2 font-bold">Home</button>
+                    <button onClick={() => onNavigate('profile')} className="block w-full text-left py-2 hover:bg-teal-700 rounded px-2">Profile</button>
                     <a href="#" className="block py-2 hover:bg-teal-700 rounded px-2">Community</a>
                     <a href="#" className="block py-2 hover:bg-teal-700 rounded px-2">Challenges</a>
 
