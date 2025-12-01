@@ -6,13 +6,11 @@ const navItems = [
     { id: 'recent-activities', label: 'Recent Activities', icon: <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />, requiresAuth: true },
     { id: 'daily-engagement', label: 'Daily Engagement', icon: <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />, requiresAuth: true },
     { id: 'global-emissions', label: 'Global Emissions', icon: <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
-    { id: 'community-stats', label: 'Community Stats', icon: <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /> },
-    { id: 'heatmap', label: 'Heatmap', icon: <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /> },
-    { id: 'leaderboard', label: 'Leaderboard', icon: <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /> },
-    { id: 'live-feed', label: 'Live Actions', icon: <path d="M13 10V3L4 14h7v7l9-11h-7z" /> },
-    { id: 'insights', label: 'Insights', icon: <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /> },
-    { id: 'breakdown', label: 'Breakdown', icon: <path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /> },
-    { id: 'comparison', label: 'Comparison', icon: <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /> },
+    { id: 'comparison', label: 'Global Impact', icon: <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /> },
+    { id: 'eco-champions', label: 'Leaderboard', icon: <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /> },
+    { id: 'live-actions', label: 'Live Actions', icon: <path d="M13 10V3L4 14h7v7l9-11h-7z" /> },
+    { id: 'actionable-insights', label: 'Insights', icon: <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /> },
+    { id: 'emission-breakdown', label: 'Breakdown', icon: <path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /> },
 ];
 
 const FloatingNav = ({ user }) => {
@@ -124,23 +122,23 @@ const FloatingNav = ({ user }) => {
     }
 
     return (
-        <div className={`fixed left-4 top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'}`}>
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col max-h-[80vh]">
+        <div className={`fixed left-4 top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isOpen ? 'w-56' : 'w-14'}`}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-[80vh] transition-colors duration-300">
                 {/* Toggle Button */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full p-4 flex items-center justify-center hover:bg-gray-50 border-b border-gray-100 transition-colors text-teal-600 flex-shrink-0"
+                    className="w-full p-3 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 transition-colors text-teal-600 dark:text-teal-400 flex-shrink-0"
                     title={isOpen ? "Collapse Menu" : "Expand Menu"}
                 >
                     {isOpen ? (
                         <div className="flex items-center gap-2 w-full">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                             </svg>
-                            <span className="font-bold text-gray-700">Navigation</span>
+                            <span className="font-bold text-sm text-gray-700 dark:text-gray-200">Navigation</span>
                         </div>
                     ) : (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     )}
@@ -152,23 +150,23 @@ const FloatingNav = ({ user }) => {
                         <button
                             key={item.id}
                             onClick={() => scrollToSection(item.id)}
-                            className={`w-full p-4 flex items-center gap-4 transition-all duration-200 group relative
-                                ${activeSection === item.id ? 'bg-teal-50 text-teal-600' : 'text-gray-500 hover:bg-gray-50 hover:text-teal-500'}
+                            className={`w-full px-3 py-2.5 flex items-center gap-3 transition-all duration-200 group relative
+                                ${activeSection === item.id ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-teal-500 dark:hover:text-teal-400'}
                             `}
                         >
-                            <div className={`w-6 h-6 flex-shrink-0 transition-transform duration-300 ${isOpen ? '' : 'mx-auto group-hover:scale-110'}`}>
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isOpen ? '' : 'mx-auto group-hover:scale-110'}`}>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     {item.icon}
                                 </svg>
                             </div>
 
-                            <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
+                            <span className={`text-sm font-medium whitespace-nowrap transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
                                 {item.label}
                             </span>
 
                             {/* Tooltip for collapsed state */}
                             {!isOpen && (
-                                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                                     {item.label}
                                 </div>
                             )}
@@ -180,7 +178,7 @@ const FloatingNav = ({ user }) => {
                 {isMobileMode && isOpen && (
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="w-full p-2 bg-gray-100 text-gray-500 text-sm hover:bg-gray-200 transition-colors border-t border-gray-200"
+                        className="w-full p-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border-t border-gray-200 dark:border-gray-600"
                     >
                         Minimize to Circle
                     </button>

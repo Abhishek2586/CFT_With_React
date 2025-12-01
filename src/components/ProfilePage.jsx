@@ -2,7 +2,7 @@ import React from 'react';
 import ProfileSidebar from './ProfileSidebar';
 import ProfileDashboard from './ProfileDashboard';
 
-const ProfilePage = ({ user, onUpdateProfile }) => {
+const ProfilePage = ({ user, onUpdateProfile, isDarkMode }) => {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -13,7 +13,7 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
 
                 {/* Right Dashboard (Charts & Stats) - Takes 8 columns on medium+ screens */}
                 <div className="md:col-span-8">
-                    <ProfileDashboard />
+                    <ProfileDashboard isDarkMode={isDarkMode} />
                 </div>
             </div>
         </div>

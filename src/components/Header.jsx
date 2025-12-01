@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Logo from './Logo';
 
-const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, currentPage }) => {
+const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, currentPage, isDarkMode, toggleTheme }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
@@ -37,6 +37,21 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                     <a href="#" className="hover:text-teal-100 transition-colors font-medium">Challenges</a>
                 </nav>
 
+                {/* Theme Toggle */}
+                <button
+                    onClick={toggleTheme}
+                    className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none mr-6 ${isDarkMode ? 'bg-teal-900 ring-2 ring-teal-700' : 'bg-sky-100 ring-2 ring-sky-200'}`}
+                    aria-label="Toggle Dark Mode"
+                >
+                    <div
+                        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${isDarkMode ? 'translate-x-8' : 'translate-x-0'}`}
+                    >
+                        <i className={`fas fa-leaf text-sm transition-colors duration-300 ${isDarkMode ? 'text-teal-600' : 'text-green-500'}`}></i>
+                    </div>
+                    <i className={`fas fa-sun absolute left-2 top-2 text-xs text-yellow-500 transition-opacity duration-300 ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}></i>
+                    <i className={`fas fa-moon absolute right-2 top-2 text-xs text-teal-300 transition-opacity duration-300 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}></i>
+                </button>
+
                 {/* Auth / Profile Section */}
                 <div className="hidden md:flex items-center">
                     {user ? (
@@ -60,15 +75,15 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                                 </div>
 
                                 {/* Achievements Dropdown */}
-                                <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50 border border-gray-100">
-                                    <div className="absolute -top-2 right-12 w-4 h-4 bg-white transform rotate-45 border-l border-t border-gray-100"></div>
+                                <div className="absolute top-full right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50 border border-gray-100 dark:border-gray-700">
+                                    <div className="absolute -top-2 right-12 w-4 h-4 bg-white dark:bg-gray-800 transform rotate-45 border-l border-t border-gray-100 dark:border-gray-700"></div>
                                     <div className="p-4">
-                                        <h3 className="text-gray-800 font-bold mb-3 text-sm uppercase tracking-wider">Your Achievements</h3>
-                                        <div className="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
-                                            <div className="text-2xl bg-white p-1 rounded-full shadow-sm">🌟</div>
+                                        <h3 className="text-gray-800 dark:text-white font-bold mb-3 text-sm uppercase tracking-wider transition-colors">Your Achievements</h3>
+                                        <div className="flex items-start space-x-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800/30 transition-colors">
+                                            <div className="text-2xl bg-white dark:bg-gray-700 p-1 rounded-full shadow-sm transition-colors">🌟</div>
                                             <div>
-                                                <p className="text-sm font-bold text-gray-800">Welcome Explorer!</p>
-                                                <p className="text-xs text-gray-500 mt-1">Start logging your eco-activities to earn your first badge.</p>
+                                                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 transition-colors">Welcome Explorer!</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">Start logging your eco-activities to earn your first badge.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -88,15 +103,15 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                                 </div>
 
                                 {/* Profile Dropdown */}
-                                <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50 overflow-hidden border border-gray-100">
+                                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50 overflow-hidden border border-gray-100 dark:border-gray-700">
                                     <div className="py-2">
-                                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                                            <p className="text-xs text-gray-500 uppercase font-semibold">Signed in as</p>
-                                            <p className="text-sm font-bold text-gray-900 truncate">{user.email || user.username}</p>
+                                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 transition-colors">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold transition-colors">Signed in as</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate transition-colors">{user.email || user.username}</p>
                                         </div>
                                         <button
                                             onClick={() => onNavigate('profile')}
-                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors"
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-700 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                                         >
                                             <svg className="w-4 h-4 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -105,7 +120,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                                         </button>
                                         <button
                                             onClick={onLogout}
-                                            className="w-full text-left flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                            className="w-full text-left flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                         >
                                             <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -151,16 +166,16 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className="md:hidden bg-teal-600 pb-4 px-4 pt-2 space-y-2 shadow-inner">
-                    <button onClick={() => onNavigate('home')} className="block w-full text-left py-2 bg-teal-700 rounded px-2 font-bold">Home</button>
-                    <button onClick={() => onNavigate('profile')} className="block w-full text-left py-2 hover:bg-teal-700 rounded px-2">Profile</button>
-                    <a href="#" className="block py-2 hover:bg-teal-700 rounded px-2">Community</a>
-                    <a href="#" className="block py-2 hover:bg-teal-700 rounded px-2">Challenges</a>
+                <div className="md:hidden bg-teal-600 dark:bg-teal-800 pb-4 px-4 pt-2 space-y-2 shadow-inner transition-colors">
+                    <button onClick={() => onNavigate('home')} className="block w-full text-left py-2 bg-teal-700 dark:bg-teal-900 rounded px-2 font-bold transition-colors">Home</button>
+                    <button onClick={() => onNavigate('profile')} className="block w-full text-left py-2 hover:bg-teal-700 dark:hover:bg-teal-900 rounded px-2 transition-colors">Profile</button>
+                    <a href="#" className="block py-2 hover:bg-teal-700 dark:hover:bg-teal-900 rounded px-2 transition-colors">Community</a>
+                    <a href="#" className="block py-2 hover:bg-teal-700 dark:hover:bg-teal-900 rounded px-2 transition-colors">Challenges</a>
 
-                    <div className="border-t border-teal-500 pt-2 mt-2 flex flex-col space-y-2">
+                    <div className="border-t border-teal-500 dark:border-teal-700 pt-2 mt-2 flex flex-col space-y-2 transition-colors">
                         {user ? (
                             <>
-                                <div className="flex items-center space-x-3 px-2 py-2 bg-teal-700/50 rounded-lg">
+                                <div className="flex items-center space-x-3 px-2 py-2 bg-teal-700/50 dark:bg-teal-900/50 rounded-lg transition-colors">
                                     <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold">
                                         {user.username ? user.username[0].toUpperCase() : 'U'}
                                     </div>
@@ -174,7 +189,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                                         onLogout();
                                         setIsMenuOpen(false);
                                     }}
-                                    className="text-left py-2 hover:bg-teal-700 rounded px-2 text-red-200 hover:text-red-100"
+                                    className="text-left py-2 hover:bg-teal-700 dark:hover:bg-teal-900 rounded px-2 text-red-200 hover:text-red-100 transition-colors"
                                 >
                                     Logout
                                 </button>
@@ -186,7 +201,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
                                         onLoginClick();
                                         setIsMenuOpen(false);
                                     }}
-                                    className="text-left py-2 hover:bg-teal-700 rounded px-2"
+                                    className="text-left py-2 hover:bg-teal-700 dark:hover:bg-teal-900 rounded px-2 transition-colors"
                                 >
                                     Login
                                 </button>

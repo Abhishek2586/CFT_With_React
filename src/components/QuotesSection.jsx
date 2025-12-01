@@ -26,7 +26,7 @@ const QuotesSection = () => {
 
     return (
         <section className="py-16 px-4">
-            <div className="max-w-6xl mx-auto bg-teal-50 rounded-[3rem] p-12 text-center shadow-sm">
+            <div className="max-w-6xl mx-auto bg-teal-50 rounded-[3rem] p-12 text-center shadow-sm dark:bg-gray-800 transition-colors duration-300">
                 {/* Quote Icon */}
                 <div className="mb-6 flex justify-center">
                     <svg className="w-16 h-16 text-teal-400" fill="currentColor" viewBox="0 0 24 24">
@@ -36,10 +36,10 @@ const QuotesSection = () => {
 
                 {/* Quote Text */}
                 <div className={`transition-opacity duration-500 ease-in-out min-h-[150px] flex flex-col justify-center ${isFading ? 'opacity-0' : 'opacity-100'}`}>
-                    <h2 className="text-3xl md:text-5xl font-medium text-gray-800 mb-6 leading-tight tracking-tight">
+                    <h2 className="text-3xl md:text-5xl font-medium text-gray-800 dark:text-white mb-6 leading-tight tracking-tight transition-colors duration-300">
                         {quotes[currentIndex].text}
                     </h2>
-                    <p className="text-gray-500 italic text-lg font-light">
+                    <p className="text-gray-500 dark:text-gray-400 italic text-lg font-light transition-colors duration-300">
                         — {quotes[currentIndex].author}
                     </p>
                 </div>

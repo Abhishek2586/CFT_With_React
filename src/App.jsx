@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
@@ -18,16 +18,46 @@ import DailyEngagement from './components/DailyEngagement';
 import ProfilePage from './components/ProfilePage';
 import './App.css'
 
+const API_URL = 'http://127.0.0.1:8000/api';
+
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      localStorage.removeItem('user');
+      return null;
+    }
   });
   const [currentPage, setCurrentPage] = useState(() => {
     return localStorage.getItem('currentPage') || 'home';
   });
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const openLogin = () => {
     setAuthMode('login');
@@ -52,7 +82,24 @@ function App() {
     localStorage.setItem('currentPage', 'home');
   };
 
+  useEffect(() => {
+    // Route protection: If on profile page and not logged in, redirect to home and open login
+    if (currentPage === 'profile' && !user) {
+      setCurrentPage('home');
+      localStorage.setItem('currentPage', 'home');
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+    }
+  }, [currentPage, user]);
+
   const handleNavigate = (page) => {
+    // Protected routes check
+    if (page === 'profile' && !user) {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     setCurrentPage(page);
     localStorage.setItem('currentPage', page);
     window.scrollTo(0, 0);
@@ -114,7 +161,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans pt-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans pt-16 transition-colors duration-300">
       <Header
         user={user}
         onLoginClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
@@ -122,6 +169,8 @@ function App() {
         onLogout={handleLogout}
         onNavigate={handleNavigate}
         currentPage={currentPage}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
       />
 
       {currentPage === 'home' && <FloatingNav user={user} />}
@@ -140,27 +189,27 @@ function App() {
 
             {user && (
               <div className="max-w-6xl mx-auto px-4 mb-12">
-                <div className="bg-white rounded-3xl shadow-lg p-8 border border-teal-50">
+                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-8 border border-teal-50 dark:border-gray-700 transition-colors duration-300">
                   <div id="impact-stats"><ImpactStats /></div>
-                  <div className="my-12 border-t border-gray-100"></div>
+                  <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
                   <div id="recent-activities"><RecentActivities /></div>
-                  <div className="my-12 border-t border-gray-100"></div>
+                  <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
                   <div id="daily-engagement"><DailyEngagement /></div>
                 </div>
               </div>
             )}
 
             <div id="global-emissions"><EmissionsMap /></div>
-            <div id="community-stats"><CommunityImpactMap /></div>
-            <div id="heatmap"><EcoChampions /></div>
-            <div id="leaderboard"><LiveActions /></div>
-            <div id="live-feed"><ActionableInsights /></div>
-            <div id="insights"><EmissionBreakdown /></div>
-            <div id="breakdown"><CountryComparison /></div>
             <div id="comparison"><ImpactSection /></div>
+            <div id="community-stats"><CommunityImpactMap /></div>
+            <div id="eco-champions"><EcoChampions /></div>
+            <div id="live-actions"><LiveActions /></div>
+            <div id="actionable-insights"><ActionableInsights /></div>
+            <div id="emission-breakdown"><EmissionBreakdown /></div>
+            <div id="country-comparison"><CountryComparison /></div>
           </>
         ) : (
-          <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} />
+          <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} isDarkMode={isDarkMode} />
         )}
       </main>
 

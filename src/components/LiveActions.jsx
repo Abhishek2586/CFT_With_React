@@ -36,37 +36,37 @@ const LiveActions = () => {
     }, []);
 
     return (
-        <section className="py-12 px-4 bg-white">
+        <section className="py-12 px-4 bg-white dark:bg-gray-800 transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center justify-center gap-3 mb-8">
                     <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
-                    <h2 className="text-3xl font-bold text-gray-800">Live Community Actions</h2>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white transition-colors">Live Community Actions</h2>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-6 shadow-inner h-[400px] overflow-hidden relative">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 shadow-inner h-[400px] overflow-hidden relative transition-colors">
                     <div className="space-y-4">
                         {actions.map((item, index) => (
                             <div
                                 key={item.id}
-                                className={`flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100 ${index === 0 ? 'animate-slide-down' : ''}`}
+                                className={`flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors ${index === 0 ? 'animate-slide-down' : ''}`}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${item.color}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${item.color} dark:bg-opacity-20`}>
                                         {item.icon}
                                     </div>
                                     <div>
-                                        <p className="text-gray-800 font-medium">
+                                        <p className="text-gray-800 dark:text-gray-200 font-medium transition-colors">
                                             <span className="font-semibold">{item.user}</span> {item.action}
                                         </p>
                                     </div>
                                 </div>
-                                <span className="text-xs text-gray-400 font-medium">{item.time}</span>
+                                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium transition-colors">{item.time}</span>
                             </div>
                         ))}
                     </div>
 
                     {/* Gradient Overlay for bottom fade */}
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent pointer-events-none transition-colors"></div>
                 </div>
 
                 <div className="mt-6">

@@ -64,12 +64,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative flex min-h-[600px]">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative flex min-h-[600px] transition-colors duration-300">
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                    className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 z-10 transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -77,7 +77,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                 </button>
 
                 {/* Left Side - Illustration (Background Image) */}
-                <div className="hidden md:block w-1/2 relative bg-teal-50">
+                <div className="hidden md:block w-1/2 relative bg-teal-50 dark:bg-teal-900 transition-colors">
                     <img
                         src={authBg}
                         alt="Eco Friendly"
@@ -89,20 +89,20 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative">
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
-                            <Logo className="w-10 h-10 text-teal-600" />
+                            <Logo className="w-10 h-10 text-teal-600 dark:text-teal-400 transition-colors" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors">
                             {mode === 'login' ? 'Login into account' : 'Create an account'}
                         </h2>
-                        <p className="text-gray-500 text-sm mt-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 transition-colors">
                             {mode === 'login'
                                 ? 'Use your credentials to access your account.'
                                 : 'Join us in making the world a greener place.'}
                         </p>
                     </div>
 
-                    {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center">{error}</div>}
-                    {success && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm text-center">{success}</div>}
+                    {error && <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm text-center">{error}</div>}
+                    {success && <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm text-center">{success}</div>}
 
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         {mode === 'register' && (
@@ -113,7 +113,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                                     placeholder="Username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
+                                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
                                     required
                                 />
                             </div>
@@ -126,7 +126,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                                 placeholder="Enter email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
                                 required
                             />
                         </div>
@@ -138,18 +138,18 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
                                 required
                             />
                         </div>
 
                         {mode === 'login' && (
                             <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center text-gray-500 cursor-pointer">
-                                    <input type="checkbox" className="mr-2 rounded text-teal-600 focus:ring-teal-500" />
+                                <label className="flex items-center text-gray-500 dark:text-gray-400 cursor-pointer">
+                                    <input type="checkbox" className="mr-2 rounded text-teal-600 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600" />
                                     Remember me
                                 </label>
-                                <a href="#" className="text-teal-600 hover:text-teal-700 font-medium">Lost password?</a>
+                                <a href="#" className="text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors">Lost password?</a>
                             </div>
                         )}
 
@@ -159,7 +159,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                     </form>
 
                     <div className="mt-8 text-center">
-                        <p className="text-gray-500 text-sm mb-4">or login with</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 transition-colors">or login with</p>
                         <div className="flex justify-center space-x-4">
                             <button className="w-10 h-10 rounded-full bg-blue-400 text-white flex items-center justify-center hover:bg-blue-500 transition-colors">
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" /></svg>

@@ -4,22 +4,22 @@ const CommunityImpactMap = () => {
     const [activeTab, setActiveTab] = useState('population');
 
     return (
-        <section className="py-16 px-4 bg-white">
+        <section className="py-16 px-4 bg-white dark:bg-gray-800 transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Community Impact Map</h2>
-                <p className="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+                <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-4 transition-colors">Community Impact Map</h2>
+                <p className="text-center text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8 transition-colors">
                     Explore the geographical distribution of our eco-conscious community. This interactive heatmap visualizes registered user density and regional average carbon emission footprints, offering insights into our collective environmental impact.
                 </p>
 
                 {/* Controls Bar */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     {/* Toggle Buttons */}
-                    <div className="bg-gray-100 p-1 rounded-lg inline-flex shadow-inner">
+                    <div className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg inline-flex shadow-inner transition-colors">
                         <button
                             onClick={() => setActiveTab('population')}
                             className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${activeTab === 'population'
                                 ? 'bg-teal-500 text-white shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                         >
                             By Population
@@ -28,7 +28,7 @@ const CommunityImpactMap = () => {
                             onClick={() => setActiveTab('emission')}
                             className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${activeTab === 'emission'
                                 ? 'bg-teal-500 text-white shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                         >
                             By Emission
@@ -36,7 +36,7 @@ const CommunityImpactMap = () => {
                     </div>
 
                     {/* Zoom Button */}
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-teal-500 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors font-medium shadow-sm group">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-teal-500 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-50 dark:hover:bg-gray-600 transition-colors font-medium shadow-sm group">
                         <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -46,10 +46,10 @@ const CommunityImpactMap = () => {
                 </div>
 
                 {/* Map Container (Loading State) */}
-                <div className="w-full h-[600px] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="w-full h-[600px] bg-gray-50 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center relative overflow-hidden group transition-colors">
 
                     {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-[0.03]"
+                    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.1]"
                         style={{
                             backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
                             backgroundSize: '20px 20px'
@@ -57,7 +57,7 @@ const CommunityImpactMap = () => {
                     </div>
 
                     {/* Loading Content */}
-                    <div className="flex flex-col items-center z-10 p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex flex-col items-center z-10 p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
                         <div className="relative mb-6">
                             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal-500"></div>
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -66,8 +66,8 @@ const CommunityImpactMap = () => {
                                 </svg>
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Loading Community Map...</h3>
-                        <p className="text-gray-500 text-center max-w-xs">
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">Loading Community Map...</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-center max-w-xs transition-colors">
                             Connecting to geospatial server to retrieve {activeTab === 'population' ? 'population' : 'emission'} data...
                         </p>
                     </div>
