@@ -149,7 +149,12 @@ class Activity(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     
     # Optional: Link to IoT Device if automated
-    source = models.CharField(max_length=20, default='manual', choices=[('manual', 'Manual'), ('iot', 'IoT Device')])
+    source = models.CharField(max_length=20, default='manual', choices=[
+        ('manual', 'Manual'), 
+        ('iot', 'IoT Device'),
+        ('chatbot_pending', 'Chatbot (Pending)'),
+        ('chatbot_processed', 'Chatbot (Processed)')
+    ])
 
     def __str__(self):
         return f"{self.user.username} - {self.category} ({self.carbon_footprint_kg}kg)"

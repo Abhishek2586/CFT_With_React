@@ -170,6 +170,8 @@ class ActivityDetailView(generics.DestroyAPIView):
         # We'll allow deletion if the ID matches, assuming the frontend handles ownership visibility
         return Activity.objects.all()
 
+from .utils import sync_pending_chatbot_activities
+
 class UserDashboardStatsView(generics.RetrieveAPIView):
     # permission_classes = [IsAuthenticated] # Uncomment in production
 
@@ -191,6 +193,10 @@ class UserDashboardStatsView(generics.RetrieveAPIView):
                     "emission_stats": {"today": 0, "yesterday": 0, "this_month": 0, "last_month": 0},
                     "budget": {"daily_limit": 15.0, "daily_used": 0, "monthly_limit": 450.0, "monthly_used": 0}
                  })
+
+        # --- LAZY SYNC: Process Pending Chatbot Activities ---
+        sync_pending_chatbot_activities(user)
+        # -----------------------------------------------------
 
         # 1. Trend Data (Last 6 Months)
         trend_data = []

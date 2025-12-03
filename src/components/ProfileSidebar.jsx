@@ -1,26 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditProfileModal from './EditProfileModal';
 
 const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
     const [budget, setBudget] = useState({ monthly_limit: 500, monthly_used: 0 });
+    const [gamificationStats, setGamificationStats] = useState({
+        level: 1,
+        xp: 0,
+        eco_coins: 0,
+        sustainability_score: 0
+    });
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchStats = async () => {
             try {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
-                let url = 'http://127.0.0.1:8000/api/dashboard-stats/';
-                if (user.email) {
-                    url += `?email=${user.email}`;
-                }
-                const response = await fetch(url);
-                if (response.ok) {
-                    const data = await response.json();
+                const emailParam = user.email ? `?email=${user.email}` : '';
+
+                // Fetch Dashboard Stats (Budget)
+                const budgetResponse = await fetch(`http://127.0.0.1:8000/api/dashboard-stats/${emailParam}`);
+                if (budgetResponse.ok) {
+                    const data = await budgetResponse.json();
                     setBudget(data.budget);
                 }
+
+                // Fetch Gamification Stats
+                const gamificationResponse = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+                if (gamificationResponse.ok) {
+                    const data = await gamificationResponse.json();
+                    setGamificationStats(data.user_stats);
+                }
+
             } catch (error) {
-                console.error('Error fetching budget stats:', error);
+                console.error('Error fetching stats:', error);
             }
         };
 
@@ -54,8 +66,6 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                     Edit Profile
                 </button>
 
-
-
                 <div className="space-y-3 text-left text-sm text-gray-600 dark:text-gray-300 transition-colors">
                     <div className="flex items-center gap-3">
                         <svg className="w-4 h-4 text-teal-500 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,6 +85,55 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <span>{user?.profile?.city ? `${user.profile.city}, ${user.profile.state}` : 'Add location'}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Gamification Stats */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-300">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2 transition-colors">
+                    <i className="fas fa-trophy text-yellow-500"></i>
+                    Gamification Stats
+                </h3>
+
+                <div className="space-y-4">
+                    {/* Level & XP */}
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Level</p>
+                            <p className="text-xl font-bold text-teal-600 dark:text-teal-400">{gamificationStats.level}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">XP</p>
+                            <p className="text-xl font-bold text-teal-600 dark:text-teal-400">{gamificationStats.xp}</p>
+                        </div>
+                    </div>
+
+                    {/* Eco Coins */}
+                    <div className="flex items-center gap-3 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl border border-yellow-100 dark:border-yellow-800/30">
+                        <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-800/40 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                            <i className="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Eco Coins</p>
+                            <p className="text-lg font-bold text-gray-800 dark:text-white">{gamificationStats.eco_coins}</p>
+                        </div>
+                    </div>
+
+                    {/* Sustainability Score */}
+                    <div>
+                        <div className="flex justify-between mb-1">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Sustainability Score</p>
+                            <p className="text-sm font-bold text-gray-800 dark:text-white">{gamificationStats.sustainability_score}/100</p>
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div
+                                className={`h-3 rounded-full ${gamificationStats.sustainability_score < 30 ? 'bg-red-500' :
+                                        gamificationStats.sustainability_score < 70 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
+                                style={{ width: `${gamificationStats.sustainability_score}%` }}
+                            ></div>
+                        </div>
                     </div>
                 </div>
             </div>
