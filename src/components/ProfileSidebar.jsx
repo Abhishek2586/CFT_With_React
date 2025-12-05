@@ -11,17 +11,21 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
         sustainability_score: 0
     });
 
+    const [categoryStats, setCategoryStats] = useState({});
+    const [showAllInsights, setShowAllInsights] = useState(false);
+
     useEffect(() => {
         const fetchStats = async () => {
             try {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const emailParam = user.email ? `?email=${user.email}` : '';
 
-                // Fetch Dashboard Stats (Budget)
+                // Fetch Dashboard Stats (Budget & Categories)
                 const budgetResponse = await fetch(`http://127.0.0.1:8000/api/dashboard-stats/${emailParam}`);
                 if (budgetResponse.ok) {
                     const data = await budgetResponse.json();
                     setBudget(data.budget);
+                    setCategoryStats(data.category_breakdown || {});
                 }
 
                 // Fetch Gamification Stats
@@ -38,6 +42,66 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
 
         fetchStats();
     }, []);
+
+    const getTopInsights = () => {
+        const insightsPool = [
+            // Transport
+            { text: "Reduce 3 km/day of petrol travel", impact: "save 0.57 kg/day", category: "transport" },
+            { text: "Switch one car trip to public transit", impact: "save ~15kg CO₂e/month", category: "transport" },
+            { text: "Carpooling for daily commute", impact: "save ~2.5 kg CO₂e/trip", category: "transport" },
+
+            // Energy
+            { text: "Lower evening electricity by 0.4 kWh", impact: "save 0.29 kg/day", category: "energy" },
+            { text: "Run washing machine after 10 PM", impact: "reduce emissions by 0.12 kg/day", category: "energy" },
+            { text: "Unplug idle electronics overnight", impact: "save ~0.1 kg CO₂e/day", category: "energy" },
+
+            // Food
+            { text: "Replace 2 dairy meals/week", impact: "save 0.54 kg/day", category: "food" },
+            { text: "Reduce packaged snacks by 3/week", impact: "save 0.2 kg/week", category: "food" },
+            { text: "Go meat-free for one day", impact: "save ~1.5 kg CO₂e", category: "food" },
+
+            // Consumption/Waste
+            { text: "Use a reusable water bottle", impact: "save ~0.08 kg CO₂e/use", category: "waste" },
+            { text: "Buy second-hand clothes", impact: "save ~5 kg CO₂e/item", category: "consumption" }
+        ];
+
+        // 1. Sort categories by contribution (descending)
+        const sortedCategories = Object.entries(categoryStats)
+            .sort(([, a], [, b]) => b - a)
+            .map(([cat]) => cat);
+
+        // 2. Select insights for top 3 categories
+        const selectedInsights = [];
+        const usedCategories = new Set();
+
+        // Try to find one insight for each of the top categories
+        for (const cat of sortedCategories) {
+            if (selectedInsights.length >= 3) break; // We only need top 3 (1 initial + 2 more)
+
+            // Find an insight for this category that hasn't been used
+            const insight = insightsPool.find(i => i.category === cat && !selectedInsights.includes(i));
+
+            if (insight) {
+                selectedInsights.push(insight);
+                usedCategories.add(cat);
+            }
+        }
+
+        // Fallback: If we don't have 3 insights (e.g. fewer categories logged), fill with remaining highest impact ones
+        if (selectedInsights.length < 3) {
+            for (const insight of insightsPool) {
+                if (selectedInsights.length >= 3) break;
+                if (!selectedInsights.some(si => si.text === insight.text)) {
+                    selectedInsights.push(insight);
+                }
+            }
+        }
+
+        return selectedInsights;
+    };
+
+    const displayInsights = getTopInsights();
+    const visibleInsights = showAllInsights ? displayInsights : displayInsights.slice(0, 1);
 
     return (
         <div className="space-y-6">
@@ -129,7 +193,7 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                         <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                             <div
                                 className={`h-3 rounded-full ${gamificationStats.sustainability_score < 30 ? 'bg-red-500' :
-                                        gamificationStats.sustainability_score < 70 ? 'bg-yellow-500' : 'bg-green-500'
+                                    gamificationStats.sustainability_score < 70 ? 'bg-yellow-500' : 'bg-green-500'
                                     }`}
                                 style={{ width: `${gamificationStats.sustainability_score}%` }}
                             ></div>
@@ -161,13 +225,32 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                     Actionable Insights
                 </h3>
                 <div className="space-y-4">
-                    <div className="flex gap-3 items-start">
-                        <svg className="w-5 h-5 text-teal-500 dark:text-teal-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">Switching one car trip to public transit could save ~15kg CO₂e.</p>
-                    </div>
+                    {visibleInsights.map((insight, index) => (
+                        <div key={index} className="flex gap-3 items-start animate-fadeIn">
+                            <div className="mt-0.5 flex-shrink-0 text-teal-500 dark:text-teal-400 font-bold text-sm bg-teal-50 dark:bg-teal-900/30 w-6 h-6 rounded flex items-center justify-center">
+                                {index + 1}
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
+                                {insight.text} <span className="font-bold text-teal-600 dark:text-teal-400">→ {insight.impact}</span>
+                            </p>
+                        </div>
+                    ))}
                 </div>
+
+                <button
+                    onClick={() => setShowAllInsights(!showAllInsights)}
+                    className="w-full mt-4 py-2 text-sm font-medium text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors flex items-center justify-center gap-1"
+                >
+                    {showAllInsights ? (
+                        <>
+                            Show Less <i className="fas fa-chevron-up text-xs"></i>
+                        </>
+                    ) : (
+                        <>
+                            View More <i className="fas fa-chevron-down text-xs"></i>
+                        </>
+                    )}
+                </button>
             </div>
 
             {/* Achievements */}
