@@ -373,3 +373,121 @@ class UserGamificationStatsView(generics.RetrieveAPIView):
             "user_stats": user_stats,
             "activity_heatmap": activity_heatmap
         })
+
+import pandas as pd
+import os
+from django.conf import settings
+import numpy as np
+
+class EnergyForecastView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            # 1. Read CSV
+            csv_path = os.path.join(settings.BASE_DIR, 'energy_data_clean.csv')
+            if not os.path.exists(csv_path):
+                return Response({'error': 'Energy data file not found'}, status=404)
+            
+            df = pd.read_csv(csv_path)
+            
+            # --- Digital Twin Demo Logic ---
+            # Scenario: It is 8:00 PM (20:00). Device is OFFLINE.
+            # We need ~36 data points: 12 for history (8am-8pm), 24 for forecast (8pm onwards).
+            
+            # 1. Get a slice of data from CSV to serve as our "base" pattern
+            # Assuming CSV has enough rows. We'll take 48 rows to be safe.
+            if len(df) < 48:
+                # Fallback if CSV is too short: repeat it
+                df = pd.concat([df]*5, ignore_index=True)
+            
+            base_data = df['Power (W)'].values[:48]
+            
+            # 2. Generate Timestamps
+            # "Today" 08:00 to Tomorrow 20:00 (36 hours total range, but we focus on 8am-8pm history + 24h forecast)
+            today = datetime.datetime.now().replace(hour=20, minute=0, second=0, microsecond=0) # Simulate "Now" is 20:00
+            
+            history_points = []
+            forecast_points = []
+            
+            # History: 08:00 to 20:00 (12 hours). Let's do hourly points for the chart clarity.
+            # We'll take the first 12 points from base_data for history.
+            for i in range(13): # 0 to 12 (inclusive of 20:00)
+                hour = 8 + i
+                time_str = f"{hour:02d}:00"
+                val = base_data[i]
+                
+                # Add some noise to make it look "real" if it's too clean
+                val = abs(val + np.random.normal(0, 0.5))
+                
+                history_points.append({
+                    "time": time_str,
+                    "power": round(val, 1),
+                    "type": "actual"
+                })
+
+            # Forecast: 21:00 onwards (Next 24 hours)
+            # We'll take the next 24 points.
+            last_val = history_points[-1]['power']
+            
+            for i in range(1, 25): # 1 to 24
+                # Calculate future time
+                future_time = today + datetime.timedelta(hours=i)
+                time_str = future_time.strftime("%H:%M")
+                
+                # LSTM Simulation Logic (Trend + Noise)
+                # Trend: Night (low), Morning (rise), Evening (peak)
+                h = future_time.hour
+                if 0 <= h < 6: trend = 0.4  # Night
+                elif 6 <= h < 9: trend = 0.8 # Morning
+                elif 17 <= h < 22: trend = 1.3 # Evening Peak
+                else: trend = 1.0 # Day
+                
+                # Smooth transition from last value
+                # Next val = 70% last_val + 30% (Base * Trend) + Noise
+                base_val = 15.0 # Avg base
+                noise = np.random.normal(0, 1.2)
+                
+                pred_val = (last_val * 0.7) + ((base_val * trend) * 0.3) + noise
+                pred_val = max(0.5, pred_val) # Ensure positive
+                last_val = pred_val
+                
+                forecast_points.append({
+                    "time": time_str,
+                    "power": round(pred_val, 1),
+                    "type": "predicted"
+                })
+
+            # Connect the lines: Add the last history point as the first forecast point (for visual continuity)
+            # But with type='predicted' so it renders in the dashed line
+            connection_point = history_points[-1].copy()
+            connection_point['type'] = 'predicted'
+            # We insert it at the start of forecast, but we need to handle the unique key in Recharts if we use 'time'.
+            # Recharts handles duplicate X values by plotting them. 
+            # Actually, for a continuous line, we usually just have one array.
+            # But the prompt asks for specific JSON structure.
+            # Let's stick to the prompt's structure. The frontend will merge or handle them.
+            # Prompt says: "forecast": [ {"time": "20:00", ...} ] // Connects to history
+            
+            forecast_points.insert(0, connection_point)
+
+            # Stats
+            avg_usage = np.mean([p['power'] for p in history_points])
+            total_forecast_kwh = sum([p['power'] for p in forecast_points[1:]]) / 1000 # Exclude connection point
+            predicted_carbon = total_forecast_kwh * 0.5 # 0.5 kg/kWh
+
+            return Response({
+                "status": "offline",
+                "last_seen": "Today, 20:00",
+                "history": history_points,
+                "forecast": forecast_points,
+                "stats": {
+                    "avg_usage": f"{round(avg_usage, 1)} W",
+                    "predicted_carbon": f"{round(predicted_carbon, 2)} kg"
+                }
+            })
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+# Reload trigger

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 const LogActivity = () => {
     const [activeTab, setActiveTab] = useState('travel');
@@ -20,16 +21,174 @@ const LogActivity = () => {
         }));
     };
 
+    // Energy Forecast State
+    const [energyForecast, setEnergyForecast] = useState(null);
+    const [loadingForecast, setLoadingForecast] = useState(false);
+
+    const fetchEnergyForecast = async () => {
+        setLoadingForecast(true);
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/energy-forecast/');
+            if (response.ok) {
+                const data = await response.json();
+                setEnergyForecast(data);
+            }
+        } catch (error) {
+            console.error('Error fetching energy forecast:', error);
+        } finally {
+            setLoadingForecast(false);
+        }
+    };
+
     const handlePlugAction = (action) => {
         if (action === 'find') {
             setFormData(prev => ({ ...prev, energy: { ...prev.energy, plugStatus: 'searching' } }));
             setTimeout(() => {
                 setFormData(prev => ({ ...prev, energy: { ...prev.energy, plugStatus: 'connected' } }));
+                fetchEnergyForecast(); // Fetch data when connected
             }, 2000);
         } else if (action === 'disconnect') {
             setFormData(prev => ({ ...prev, energy: { ...prev.energy, plugStatus: 'disconnected' } }));
+            setEnergyForecast(null);
         }
     };
+
+    // ... (rest of the component logic) ...
+
+    // Render Logic for Energy Tab
+    // ...
+
+    {/* Connected State - Digital Twin Dashboard */ }
+    {
+        formData.energy.plugStatus === 'connected' && (
+            <div className="bg-white dark:bg-gray-900 border border-teal-100 dark:border-teal-900/50 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-teal-100 dark:bg-teal-900/40 rounded-full text-teal-600 dark:text-teal-400 animate-pulse">
+                            <i className="fas fa-microchip text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-xl text-gray-800 dark:text-white">Digital Twin Monitor</h3>
+                            <p className="text-sm text-teal-600 dark:text-teal-400 font-medium">Real-time IoT & AI Forecast</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Status</div>
+                        {energyForecast?.status === 'offline' ? (
+                            <div className="text-red-500 font-bold flex items-center justify-end gap-1">
+                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                Offline
+                            </div>
+                        ) : (
+                            <div className="text-green-500 font-bold flex items-center justify-end gap-1">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                                Online
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {loadingForecast || !energyForecast ? (
+                    <div className="h-64 flex items-center justify-center text-gray-400 flex-col gap-2">
+                        <i className="fas fa-circle-notch fa-spin text-3xl text-teal-500"></i>
+                        <p>Syncing with Digital Twin...</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Offline Alert */}
+                        {energyForecast.status === 'offline' && (
+                            <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-100 text-orange-800 flex items-start gap-3">
+                                <i className="fas fa-exclamation-triangle mt-1 text-lg"></i>
+                                <div>
+                                    <span className="font-bold block text-sm opacity-80">Device Offline</span>
+                                    Switching to AI Forecast Mode (LSTM). Displaying predicted usage based on historical patterns.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Chart */}
+                        <div className="h-64 w-full mb-6">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={[...energyForecast.history, ...energyForecast.forecast]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                    <XAxis
+                                        dataKey="time"
+                                        stroke="#9ca3af"
+                                        tick={{ fontSize: 12 }}
+                                        interval={4}
+                                    />
+                                    <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                        labelStyle={{ color: '#374151', fontWeight: 'bold' }}
+                                    />
+
+                                    <ReferenceLine x="20:00" stroke="#f97316" strokeDasharray="3 3" label={{ value: 'Live Data Ends', position: 'top', fill: '#f97316', fontSize: 10 }} />
+
+                                    {/* History Line (Blue, Solid) */}
+                                    <Line
+                                        type="monotone"
+                                        dataKey="power"
+                                        data={energyForecast.history}
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
+                                        dot={false}
+                                        name="Actual Power (W)"
+                                        activeDot={{ r: 6 }}
+                                    />
+
+                                    {/* Forecast Line (Green, Dashed) */}
+                                    <Line
+                                        type="monotone"
+                                        dataKey="power"
+                                        data={energyForecast.forecast}
+                                        stroke="#10b981"
+                                        strokeWidth={3}
+                                        strokeDasharray="5 5"
+                                        dot={false}
+                                        name="Predicted Power (W)"
+                                    />
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <div className="text-gray-500 text-xs font-bold uppercase mb-1">Avg Usage (Last 12h)</div>
+                                <div className="text-2xl font-bold text-gray-800 dark:text-white">
+                                    {energyForecast.stats.avg_usage}
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <div className="text-gray-500 text-xs font-bold uppercase mb-1">Predicted Carbon</div>
+                                <div className="text-2xl font-bold text-teal-600">
+                                    {energyForecast.stats.predicted_carbon}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={fetchEnergyForecast}
+                                className="flex-1 px-4 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                                <i className="fas fa-sync-alt"></i>
+                                Refresh Data
+                            </button>
+                            <button
+                                onClick={() => handlePlugAction('disconnect')}
+                                className="flex-1 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                                <i className="fas fa-power-off"></i>
+                                Disconnect
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        )
+    }
 
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
@@ -377,40 +536,133 @@ const LogActivity = () => {
                             </div>
                         )}
 
-                        {/* Connected State */}
+                        {/* Connected State - Digital Twin Dashboard */}
                         {formData.energy.plugStatus === 'connected' && (
-                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 rounded-xl p-6">
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="p-3 bg-green-100 dark:bg-green-800/40 rounded-full text-green-600 dark:text-green-400">
-                                        <i className="fas fa-check-circle text-xl"></i>
+                            <div className="bg-white dark:bg-gray-900 border border-teal-100 dark:border-teal-900/50 rounded-2xl p-6 shadow-lg">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-3 bg-teal-100 dark:bg-teal-900/40 rounded-full text-teal-600 dark:text-teal-400 animate-pulse">
+                                            <i className="fas fa-microchip text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-xl text-gray-800 dark:text-white">Digital Twin Monitor</h3>
+                                            <p className="text-sm text-teal-600 dark:text-teal-400 font-medium">Real-time IoT & AI Forecast</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-green-800 dark:text-green-300">Connected to Smart Plug</h3>
-                                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">Live data is being received.</p>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-green-100 dark:border-green-800/30 flex items-center justify-between mb-4">
-                                    <span className="text-gray-600 dark:text-gray-400">Current Consumption</span>
                                     <div className="text-right">
-                                        <span className="text-2xl font-bold text-gray-800 dark:text-white">1.25</span>
-                                        <span className="text-sm text-gray-500 ml-1">kWh</span>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">Status</div>
+                                        {energyForecast?.status === 'offline' ? (
+                                            <div className="text-red-500 font-bold flex items-center justify-end gap-1">
+                                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                                Offline
+                                            </div>
+                                        ) : (
+                                            <div className="text-green-500 font-bold flex items-center justify-end gap-1">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                                                Online
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
-                                    <button className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-                                        <i className="fas fa-sync-alt"></i>
-                                        Sync Now
-                                    </button>
-                                    <button
-                                        onClick={() => handlePlugAction('disconnect')}
-                                        className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <i className="fas fa-times-circle"></i>
-                                        Disconnect
-                                    </button>
-                                </div>
+                                {loadingForecast || !energyForecast ? (
+                                    <div className="h-64 flex items-center justify-center text-gray-400 flex-col gap-2">
+                                        <i className="fas fa-circle-notch fa-spin text-3xl text-teal-500"></i>
+                                        <p>Syncing with Digital Twin...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Offline Alert */}
+                                        {energyForecast.status === 'offline' && (
+                                            <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-100 text-orange-800 flex items-start gap-3">
+                                                <i className="fas fa-exclamation-triangle mt-1 text-lg"></i>
+                                                <div>
+                                                    <span className="font-bold block text-sm opacity-80">Device Offline</span>
+                                                    Switching to AI Forecast Mode (LSTM). Displaying predicted usage based on historical patterns.
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Chart */}
+                                        <div className="h-64 w-full mb-6">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <ComposedChart data={[...energyForecast.history, ...energyForecast.forecast]} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                                    <XAxis
+                                                        dataKey="time"
+                                                        stroke="#9ca3af"
+                                                        tick={{ fontSize: 12 }}
+                                                        interval={4}
+                                                    />
+                                                    <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
+                                                    <Tooltip
+                                                        contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                                        labelStyle={{ color: '#374151', fontWeight: 'bold' }}
+                                                    />
+
+                                                    <ReferenceLine x="20:00" stroke="#f97316" strokeDasharray="3 3" label={{ value: 'Live Data Ends', position: 'top', fill: '#f97316', fontSize: 10 }} />
+
+                                                    {/* History Line (Blue, Solid) */}
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="power"
+                                                        data={energyForecast.history}
+                                                        stroke="#3b82f6"
+                                                        strokeWidth={3}
+                                                        dot={false}
+                                                        name="Actual Power (W)"
+                                                        activeDot={{ r: 6 }}
+                                                    />
+
+                                                    {/* Forecast Line (Green, Dashed) */}
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="power"
+                                                        data={energyForecast.forecast}
+                                                        stroke="#10b981"
+                                                        strokeWidth={3}
+                                                        strokeDasharray="5 5"
+                                                        dot={false}
+                                                        name="Predicted Power (W)"
+                                                    />
+                                                </ComposedChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        {/* Stats Grid */}
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                                <div className="text-gray-500 text-xs font-bold uppercase mb-1">Avg Usage (Last 12h)</div>
+                                                <div className="text-2xl font-bold text-gray-800 dark:text-white">
+                                                    {energyForecast.stats.avg_usage}
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                                <div className="text-gray-500 text-xs font-bold uppercase mb-1">Predicted Carbon</div>
+                                                <div className="text-2xl font-bold text-teal-600">
+                                                    {energyForecast.stats.predicted_carbon}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={fetchEnergyForecast}
+                                                className="flex-1 px-4 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <i className="fas fa-sync-alt"></i>
+                                                Refresh Data
+                                            </button>
+                                            <button
+                                                onClick={() => handlePlugAction('disconnect')}
+                                                className="flex-1 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <i className="fas fa-power-off"></i>
+                                                Disconnect
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 
