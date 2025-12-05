@@ -22,7 +22,19 @@ import Challenges from './components/Challenges';
 import BackgroundAnimation from './components/BackgroundAnimation';
 import './App.css'
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 export const API_URL = 'http://127.0.0.1:8000/api';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -191,67 +203,69 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans pt-16 transition-colors duration-300 relative">
-      <BackgroundAnimation />
-      <Header
-        user={user}
-        onLoginClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
-        onRegisterClick={() => { setAuthMode('register'); setIsAuthModalOpen(true); }}
-        onLogout={handleLogout}
-        onNavigate={handleNavigate}
-        currentPage={currentPage}
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
-      />
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans pt-16 transition-colors duration-300 relative">
+        <BackgroundAnimation />
+        <Header
+          user={user}
+          onLoginClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
+          onRegisterClick={() => { setAuthMode('register'); setIsAuthModalOpen(true); }}
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          currentPage={currentPage}
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+        />
 
-      {currentPage === 'home' && <FloatingNav user={user} />}
+        {currentPage === 'home' && <FloatingNav user={user} />}
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authMode}
-        onLoginSuccess={handleLoginSuccess}
-      />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode={authMode}
+          onLoginSuccess={handleLoginSuccess}
+        />
 
-      <main className={`flex-grow ${currentPage === 'community' ? '' : 'pt-6'}`}>
-        {currentPage === 'home' ? (
-          <>
-            <div id="welcome"><QuotesSection onNavigate={handleNavigate} /></div>
+        <main className={`flex-grow ${currentPage === 'community' ? '' : 'pt-6'}`}>
+          {currentPage === 'home' ? (
+            <>
+              <div id="welcome"><QuotesSection onNavigate={handleNavigate} /></div>
 
-            {user && (
-              <div className="max-w-6xl mx-auto px-4 mb-12">
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-8 border border-teal-50 dark:border-gray-700 transition-colors duration-300">
-                  <div id="impact-stats"><ImpactStats /></div>
-                  <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
-                  <div id="recent-activities"><RecentActivities /></div>
-                  <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
-                  <div id="daily-engagement"><DailyEngagement onNavigate={handleNavigate} /></div>
+              {user && (
+                <div className="max-w-6xl mx-auto px-4 mb-12">
+                  <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-8 border border-teal-50 dark:border-gray-700 transition-colors duration-300">
+                    <div id="impact-stats"><ImpactStats /></div>
+                    <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
+                    <div id="recent-activities"><RecentActivities /></div>
+                    <div className="my-12 border-t border-gray-100 dark:border-gray-700 transition-colors"></div>
+                    <div id="daily-engagement"><DailyEngagement onNavigate={handleNavigate} /></div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div id="global-emissions"><EmissionsMap /></div>
-            <div id="comparison"><ImpactSection /></div>
-            <div id="community-stats"><CommunityImpactMap /></div>
-            <div id="eco-champions"><EcoChampions /></div>
-            <div id="live-actions"><LiveActions /></div>
-            <div id="actionable-insights"><ActionableInsights /></div>
-            <div id="emission-breakdown"><EmissionBreakdown /></div>
-            <div id="country-comparison"><CountryComparison /></div>
-          </>
-        ) : currentPage === 'log-activity' ? (
-          <LogActivity />
-        ) : currentPage === 'community' ? (
-          <Community />
-        ) : currentPage === 'challenges' ? (
-          <Challenges />
-        ) : (
-          <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} isDarkMode={isDarkMode} onNavigate={handleNavigate} />
-        )}
-      </main>
+              <div id="global-emissions"><EmissionsMap /></div>
+              <div id="comparison"><ImpactSection /></div>
+              <div id="community-stats"><CommunityImpactMap /></div>
+              <div id="eco-champions"><EcoChampions /></div>
+              <div id="live-actions"><LiveActions /></div>
+              <div id="actionable-insights"><ActionableInsights /></div>
+              <div id="emission-breakdown"><EmissionBreakdown /></div>
+              <div id="country-comparison"><CountryComparison /></div>
+            </>
+          ) : currentPage === 'log-activity' ? (
+            <LogActivity />
+          ) : currentPage === 'community' ? (
+            <Community />
+          ) : currentPage === 'challenges' ? (
+            <Challenges />
+          ) : (
+            <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} isDarkMode={isDarkMode} onNavigate={handleNavigate} />
+          )}
+        </main>
 
-      <Footer />
-    </div >
+        <Footer />
+      </div >
+    </QueryClientProvider>
   );
 }
 

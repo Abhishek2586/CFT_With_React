@@ -1,4 +1,6 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '../App';
 
 const StatCard = ({ icon, value, unit, label, subLabel, isImprovement, isRank }) => (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center group">
@@ -14,47 +16,43 @@ const StatCard = ({ icon, value, unit, label, subLabel, isImprovement, isRank })
     </div>
 );
 
+const fetchImpactStats = async () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    let url = `${API_URL}/dashboard-stats/`;
+    if (user.email) {
+        url += `?email=${user.email}`;
+    }
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+};
+
 const ImpactStats = () => {
-    const [stats, setStats] = React.useState({
-        thisMonth: 0,
-        lastMonth: 0,
-        improvement: 0
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['dashboardStats'],
+        queryFn: fetchImpactStats,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-    React.useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                let url = 'http://127.0.0.1:8000/api/dashboard-stats/';
-                if (user.email) {
-                    url += `?email=${user.email}`;
-                }
-                const response = await fetch(url);
-                if (response.ok) {
-                    const data = await response.json();
-                    const thisMonth = data.emission_stats.this_month;
-                    const lastMonth = data.emission_stats.last_month;
+    if (isLoading) {
+        return <div className="text-center py-8">Loading stats...</div>;
+    }
 
-                    let improvement = 0;
-                    if (lastMonth > 0) {
-                        improvement = ((lastMonth - thisMonth) / lastMonth) * 100;
-                    } else if (thisMonth > 0) {
-                        improvement = -100; // If last month was 0 and this month > 0, it's a decrease in performance (negative improvement)
-                    }
+    if (error) {
+        return <div className="text-center py-8 text-red-500">Error loading stats</div>;
+    }
 
-                    setStats({
-                        thisMonth,
-                        lastMonth,
-                        improvement
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching impact stats:', error);
-            }
-        };
+    const thisMonth = data?.emission_stats?.this_month || 0;
+    const lastMonth = data?.emission_stats?.last_month || 0;
 
-        fetchStats();
-    }, []);
+    let improvement = 0;
+    if (lastMonth > 0) {
+        improvement = ((lastMonth - thisMonth) / lastMonth) * 100;
+    } else if (thisMonth > 0) {
+        improvement = -100;
+    }
 
     return (
         <div>
@@ -62,23 +60,23 @@ const ImpactStats = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     icon={<i className="fas fa-leaf"></i>}
-                    value={stats.thisMonth}
+                    value={thisMonth}
                     unit="kg CO2e"
                     label="Your Footprint"
                     subLabel="(This Month)"
                 />
                 <StatCard
                     icon={<i className="fas fa-chart-line"></i>}
-                    value={stats.lastMonth}
+                    value={lastMonth}
                     unit="kg CO2e"
                     label="vs. Last Month"
                 />
                 <StatCard
-                    icon={<i className={`fas fa-arrow-${stats.improvement >= 0 ? 'down' : 'up'}`}></i>}
-                    value={`${stats.improvement >= 0 ? '↓' : '↑'} ${Math.abs(stats.improvement).toFixed(1)}%`}
+                    icon={<i className={`fas fa-arrow-${improvement >= 0 ? 'down' : 'up'}`}></i>}
+                    value={`${improvement >= 0 ? '↓' : '↑'} ${Math.abs(improvement).toFixed(1)}%`}
                     label="Monthly Improvement"
-                    isImprovement={stats.improvement >= 0}
-                    subLabel={stats.improvement >= 0 ? "Reduction" : "Increase"}
+                    isImprovement={improvement >= 0}
+                    subLabel={improvement >= 0 ? "Reduction" : "Increase"}
                 />
                 <StatCard
                     icon={<i className="fas fa-trophy"></i>}

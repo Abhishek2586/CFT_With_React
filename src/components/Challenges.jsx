@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '../App';
 
-// --- Dummy Data ---
+// --- Dummy Data (Fallback) ---
 const mockChallenges = [
     {
         id: 1,
@@ -136,26 +138,61 @@ const mockChallenges = [
     }
 ];
 
+const fetchChallenges = async () => {
+    // In a real app, this would be:
+    // const response = await fetch(`${API_URL}/challenges/`);
+    // if (!response.ok) throw new Error('Network response was not ok');
+    // return response.json();
+
+    // Simulating API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockChallenges;
+};
+
 const Challenges = () => {
     const [activeTab, setActiveTab] = useState('Active');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedChallenge, setSelectedChallenge] = useState(null);
+
+    const { data: challenges = [], isLoading, error } = useQuery({
+        queryKey: ['challenges'],
+        queryFn: fetchChallenges,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
     // Dummy User Stats for Hero Section
     const userStats = {
         level: 5,
         xp: 2450,
         nextLevelXp: 3000,
-        activeChallenges: mockChallenges.filter(c => c.status === 'Active').length
+        activeChallenges: challenges.filter(c => c.status === 'Active').length
     };
 
-    const filteredChallenges = mockChallenges.filter(challenge => {
+    const filteredChallenges = challenges.filter(challenge => {
         const matchesTab = activeTab === 'All' || challenge.status === activeTab;
         const matchesCategory = selectedCategory === 'All' || challenge.category === selectedCategory;
         return matchesTab && matchesCategory;
     });
 
     const categories = ["All", "Transport", "Energy", "Food", "Community"];
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-red-500">
+                Error loading challenges: {error.message}
+            </div>
+        );
+    }
+
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans pb-12">
@@ -217,8 +254,8 @@ const Challenges = () => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${activeTab === tab
-                                        ? "bg-green-500 text-white shadow-md"
-                                        : "text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400"
+                                    ? "bg-green-500 text-white shadow-md"
+                                    : "text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400"
                                     }`}
                             >
                                 {tab}
@@ -233,8 +270,8 @@ const Challenges = () => {
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
                                 className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap ${selectedCategory === cat
-                                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
-                                        : "bg-transparent border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-300"
+                                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+                                    : "bg-transparent border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-300"
                                     }`}
                             >
                                 {cat}

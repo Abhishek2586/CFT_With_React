@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '../App';
 
 const ActivityItem = ({ icon, title, description, impact, color }) => (
     <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-teal-100 dark:hover:border-teal-900 hover:shadow-md transition-all duration-300 group">
@@ -17,32 +19,26 @@ const ActivityItem = ({ icon, title, description, impact, color }) => (
     </div>
 );
 
+const fetchActivities = async () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    // Use provided test email or fallback to logged in user
+    const email = user.email || 'adityashahil346@gmail.com';
+
+    const response = await fetch(`${API_URL}/log-activity/?email=${email}`);
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return response.json();
+};
+
 const RecentActivities = () => {
-    const [activities, setActivities] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchActivities = async () => {
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                // Use provided test email or fallback to logged in user
-                const email = user.email || 'adityashahil346@gmail.com';
-
-                const response = await fetch(`http://127.0.0.1:8000/api/log-activity/?email=${email}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setActivities(data);
-                }
-            } catch (error) {
-                console.error('Error fetching activities:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchActivities();
-    }, []);
+    const { data: activities = [], isLoading, error } = useQuery({
+        queryKey: ['activities'],
+        queryFn: fetchActivities,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
     const getCategoryIcon = (category) => {
         switch (category) {
@@ -79,8 +75,10 @@ const RecentActivities = () => {
             <h2 className="text-2xl font-bold text-teal-800 dark:text-teal-400 mb-6 text-center transition-colors duration-300">Your Recent Activities</h2>
 
             <div className="space-y-4">
-                {loading ? (
+                {isLoading ? (
                     <p className="text-center text-gray-500">Loading activities...</p>
+                ) : error ? (
+                    <p className="text-center text-red-500">Error loading activities.</p>
                 ) : activities.length > 0 ? (
                     displayedActivities.map((activity) => (
                         <ActivityItem

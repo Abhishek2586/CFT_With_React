@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '../App';
 
-// --- Dummy Data ---
+// --- Dummy Data (Fallback) ---
 const mockCommunities = [
     {
         id: 1,
@@ -114,20 +116,53 @@ const mockCommunities = [
 
 const myCommunitiesIds = [1, 2]; // IDs of communities the user has joined
 
+const fetchCommunities = async () => {
+    // In a real app, this would be:
+    // const response = await fetch(`${API_URL}/communities/`);
+    // if (!response.ok) throw new Error('Network response was not ok');
+    // return response.json();
+
+    // Simulating API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockCommunities;
+};
+
 const Community = () => {
     const [filter, setFilter] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCommunity, setSelectedCommunity] = useState(null);
 
-    const myCommunities = mockCommunities.filter(c => myCommunitiesIds.includes(c.id));
+    const { data: communities = [], isLoading, error } = useQuery({
+        queryKey: ['communities'],
+        queryFn: fetchCommunities,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
-    const filteredCommunities = mockCommunities.filter(c => {
+    const myCommunities = communities.filter(c => myCommunitiesIds.includes(c.id));
+
+    const filteredCommunities = communities.filter(c => {
         const matchesFilter = filter === "All" ||
             (filter === "My Communities" && myCommunitiesIds.includes(c.id)) ||
             c.type === filter;
         const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesFilter && matchesSearch;
     });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal-500"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-red-500">
+                Error loading communities: {error.message}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
