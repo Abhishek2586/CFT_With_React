@@ -38,8 +38,21 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     def get_is_member(self, obj):
         request = self.context.get('request')
+        user = None
+        
         if request and request.user.is_authenticated:
-            return obj.members.filter(id=request.user.id).exists()
+            user = request.user
+        elif request:
+             # Fallback for anon requests using query param if available
+             email = request.query_params.get('email')
+             if email:
+                 try:
+                     user = User.objects.get(email=email)
+                 except User.DoesNotExist:
+                     pass
+        
+        if user:
+            return obj.members.filter(id=user.id).exists()
         return False
 
     def to_representation(self, instance):

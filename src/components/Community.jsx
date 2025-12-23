@@ -1,70 +1,159 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '../App';
 
-// --- API Hook ---
+// --- Dummy Fallback Data for UI fields not in backend yet ---
+const fallbackData = {
+    eco_score: 3,
+    next_event: "Community Cleanup (Sat)",
+    leaderboard: [
+        { name: "Alice", score: "120kg" },
+        { name: "Bob", score: "95kg" },
+        { name: "Charlie", score: "88kg" }
+    ],
+    active_challenge: "Zero Waste Week",
+    challenge_progress: 65,
+    latest_post: "Join us for the next event!"
+};
+
 const fetchCommunities = async () => {
+    // Get user info for "is_member" check if needed, though backend serializer handles it if token logic is consistent.
+    // Assuming backend returns all communities.
+    try {
+        const email = JSON.parse(localStorage.getItem('user') || '{}').email;
+        // Pass email as query param so backend knows who "I" am for "is_member" field
+        const url = email
+            ? `http://127.0.0.1:8000/api/communities/?email=${encodeURIComponent(email)}`
+            : 'http://127.0.0.1:8000/api/communities/';
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch communities');
+        return res.json();
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+};
+
+const joinLeaveCommunity = async ({ id, action }) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const emailParam = user.email ? `?email=${user.email}` : '';
-    const response = await fetch(`${API_URL}/communities/${emailParam}`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
+    if (!user.email) {
+        throw new Error("You must be logged in to join a community.");
+    }
+
+    console.log(`Attempting to ${action} community ${id} for ${user.email}`);
+
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/communities/${id}/${action}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || errData.message || `Failed to ${action}`);
+        }
+        return res.json();
+    } catch (error) {
+        console.error("Join/Leave API Error:", error);
+        throw error;
+    }
+};
+
+// Simple Pop-up Notification Component
+const NotificationPopup = ({ message, onClose }) => {
+    if (!message) return null;
+    return (
+        <div className="fixed top-24 right-4 z-[60] animate-fade-in-right">
+            <div className="bg-teal-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 border border-teal-400/30 backdrop-blur-md">
+                <div className="bg-white/20 p-2 rounded-full">
+                    <i className="fas fa-check text-lg"></i>
+                </div>
+                <div>
+                    <h4 className="font-bold text-sm">Success!</h4>
+                    <p className="text-sm opacity-90">{message}</p>
+                </div>
+                <button onClick={onClose} className="ml-2 hover:bg-white/10 p-1 rounded-full transition-colors">
+                    <i className="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    );
 };
 
 const Community = () => {
     const [filter, setFilter] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCommunity, setSelectedCommunity] = useState(null);
-    const { refetch, data: communities = [], isLoading, error } = useQuery({
+    const [notification, setNotification] = useState(null); // State for popup
+    const queryClient = useQueryClient();
+
+    const { data: communities = [], isLoading, error } = useQuery({
         queryKey: ['communities'],
         queryFn: fetchCommunities,
     });
 
-    const handleJoinLeave = async (e, community, action) => {
-        e.stopPropagation();
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (!user.email) {
-            alert("Please login to join communities.");
-            return;
-        }
+    const mutation = useMutation({
+        mutationFn: joinLeaveCommunity,
+        onSuccess: (data, variables) => {
+            // Show popup
+            const actionText = variables.action === 'join' ? 'Joined' : 'Left';
+            setNotification(`Successfully ${actionText} the community!`);
 
-        try {
-            const res = await fetch(`${API_URL}/communities/${community.id}/${action}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: user.email }) // Pass email for auth fallback if needed
-            });
+            // Auto hide after 3 seconds
+            setTimeout(() => setNotification(null), 3000);
 
-            if (res.ok) {
-                refetch(); // Refresh list to update counts and membership status
-                if (selectedCommunity && selectedCommunity.id === community.id) {
-                    // Update selected community state if open
-                    setSelectedCommunity(prev => ({
-                        ...prev,
-                        is_member: action === 'join',
-                        members_count: action === 'join' ? prev.members_count + 1 : prev.members_count - 1
-                    }));
-                }
-            } else {
-                const err = await res.json();
-                alert(`Failed to ${action}: ` + (err.error || "Unknown error"));
+            queryClient.invalidateQueries(['communities']);
+            // Also update selectedCommunity if it's open
+            if (selectedCommunity) {
+                setSelectedCommunity(prev => ({
+                    ...prev,
+                    is_member: !prev.is_member,
+                    members: prev.is_member ? prev.members - 1 : prev.members + 1
+                }));
             }
-        } catch (error) {
-            console.error(error);
-            alert("Something went wrong.");
+        },
+        onError: (error) => {
+            alert(error.message);
         }
-    };
-
-    // Client-side filtering logic on the fetched list
-    const filteredCommunities = communities.filter(c => {
-        const matchesFilter = filter === "All" ||
-            (filter === "My Communities" && c.is_member) ||
-            c.type === filter;
-        const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch;
     });
 
-    const myCommunities = communities.filter(c => c.is_member);
+    const handleJoin = (e, community) => {
+        e.stopPropagation();
+        const action = community.is_member ? 'leave' : 'join';
+        mutation.mutate({ id: community.id, action });
+    };
+
+    // Enhance API data with dummy fields for UI if missing
+    const enhancedCommunities = communities.map(c => ({
+        ...fallbackData, // Defaults
+        ...c,            // API Data overrides
+        // Ensure numbers are numbers
+        members: c.members_count || 0,
+        // Ensure Image
+        image: c.image || c.image_url || "https://images.unsplash.com/photo-1542601906990-24d4c16419d4?auto=format&fit=crop&q=80&w=800"
+    }));
+
+    const myCommunities = enhancedCommunities.filter(c => c.is_member);
+
+    const filteredCommunities = enhancedCommunities.filter(c => {
+        // Filter Logic
+        // "My Communities" tab logic handled by displaying myCommunities array separately or filtering here.
+        // The original design had My Communities as a separate section at top, and "Discover" below.
+        // The filter tabs acted on the "Discover" section effectively, OR on both.
+        // Let's stick to original behavior: 
+        // 1. "My Communities" tab works on the main list? No, original had logic:
+        // `if (myCommunities.length > 0 && filter === "All")` -> Show scrollable my teams.
+        // `filteredCommunities` applied to the Grid below.
+
+        // If filter is "My Communities", user likely wants to see ONLY theirs in the list?
+        if (filter === "My Communities") return c.is_member;
+
+        const matchesType = filter === "All" || c.type === filter;
+        const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesType && matchesSearch;
+    });
 
     if (isLoading) {
         return (
@@ -77,13 +166,15 @@ const Community = () => {
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-red-500">
-                Error loading communities: {error.message}
+                Error loading communities. Is the server running?
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans relative">
+
+            <NotificationPopup message={notification} onClose={() => setNotification(null)} />
 
             {/* 1. Header Section */}
             <div className="relative bg-gradient-to-r from-teal-600 to-green-500 dark:from-teal-800 dark:to-green-700 text-white p-8 md:p-12 rounded-b-3xl shadow-lg mb-8 overflow-hidden">
@@ -117,14 +208,17 @@ const Community = () => {
                 <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="text-center md:text-left">
                         <h1 className="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight">Community Hub 🌍</h1>
-                        <p className="text-lg md:text-xl text-teal-100 font-medium">Join thousands of Eco-Warriors making a difference together.</p>
+                        <p className="text-lg md:text-xl text-teal-100 font-medium">Join thousands making a difference together.</p>
 
                         <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-6 text-sm font-semibold">
                             <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2">
-                                <i className="fas fa-cloud-meatball"></i> Impact Together
+                                <i className="fas fa-cloud-meatball"></i> 500 Tons CO₂ Saved
                             </div>
                             <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2">
-                                <i className="fas fa-users"></i> {communities.length} Communities
+                                <i className="fas fa-users"></i> {enhancedCommunities.reduce((acc, c) => acc + c.members, 0) || 12500} Users
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2">
+                                <i className="fas fa-flag-checkered"></i> {enhancedCommunities.length} Communities
                             </div>
                         </div>
                     </div>
@@ -175,12 +269,12 @@ const Community = () => {
                         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                             {myCommunities.map(community => (
                                 <div key={community.id} className="min-w-[280px] bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedCommunity(community)}>
-                                    <img src={community.image || "https://source.unsplash.com/random/100x100/?nature"} alt={community.name} className="w-12 h-12 rounded-full object-cover border-2 border-teal-100 dark:border-teal-900" />
+                                    <img src={community.image} alt={community.name} className="w-12 h-12 rounded-full object-cover border-2 border-teal-100 dark:border-teal-900" />
                                     <div>
                                         <h3 className="font-bold text-gray-800 dark:text-white truncate w-40">{community.name}</h3>
-                                        <div className="text-xs text-teal-600 dark:text-teal-400 font-medium truncate w-40">
-                                            {community.members_count} Members
-                                        </div>
+                                        <p className="text-xs text-teal-600 dark:text-teal-400 font-medium truncate w-40">
+                                            <i className="fas fa-user-check mr-1"></i> Member
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -195,11 +289,13 @@ const Community = () => {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredCommunities.map(community => (
-                            <div key={community.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer" onClick={() => setSelectedCommunity(community)}>
+                            <div key={community.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 group">
                                 <div className="h-32 bg-gray-200 dark:bg-gray-700 relative">
-                                    <img src={community.image || community.image_url || "https://source.unsplash.com/random/800x600/?nature"} alt={community.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <img src={community.image} alt={community.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold flex gap-1 shadow-sm">
-                                        🌿 {community.total_community_emission.toFixed(1)}kg
+                                        {[...Array(community.eco_score || 3)].map((_, i) => (
+                                            <span key={i}>🌿</span>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="p-5">
@@ -210,19 +306,22 @@ const Community = () => {
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 h-10">{community.description}</p>
 
                                     <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-6">
-                                        <span className="flex items-center gap-1"><i className="fas fa-user-friends"></i> {community.members_count.toLocaleString()} Members</span>
-                                        {community.is_member && <span className="flex items-center gap-1 text-green-500 font-bold"><i className="fas fa-check-circle"></i> Joined</span>}
+                                        <span className="flex items-center gap-1"><i className="fas fa-user-friends"></i> {community.members.toLocaleString()} Members</span>
+                                        <span className="flex items-center gap-1"><i className="fas fa-trophy text-yellow-500"></i> Top 10%</span>
                                     </div>
 
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={(e) => handleJoinLeave(e, community, community.is_member ? 'leave' : 'join')}
-                                            className={`flex-1 border ${community.is_member ? 'border-red-500 text-red-500 hover:bg-red-50' : 'border-teal-500 text-teal-500 hover:bg-teal-50'} dark:hover:bg-opacity-10 py-2 rounded-lg font-semibold text-sm transition-colors`}
+                                            onClick={(e) => handleJoin(e, community)}
+                                            className={`flex-1 border py-2 rounded-lg font-semibold text-sm transition-colors ${community.is_member
+                                                ? 'border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
+                                                : 'border-teal-500 text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30'
+                                                }`}
                                         >
                                             {community.is_member ? 'Leave' : 'Join'}
                                         </button>
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); setSelectedCommunity(community); }}
+                                            onClick={() => setSelectedCommunity(community)}
                                             className="flex-1 bg-teal-500 text-white hover:bg-teal-600 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all"
                                         >
                                             View Details
@@ -243,11 +342,11 @@ const Community = () => {
 
             {/* 5. Community Detail Modal */}
             {selectedCommunity && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setSelectedCommunity(null)}>
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up">
                         {/* Modal Header */}
-                        <div className="relative h-44">
-                            <img src={selectedCommunity.image || selectedCommunity.image_url} alt={selectedCommunity.name} className="w-full h-full object-cover" />
+                        <div className="relative h-40">
+                            <img src={selectedCommunity.image} alt={selectedCommunity.name} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                             <button
                                 onClick={() => setSelectedCommunity(null)}
@@ -258,21 +357,69 @@ const Community = () => {
                             <div className="absolute bottom-4 left-6 text-white">
                                 <h2 className="text-3xl font-bold">{selectedCommunity.name}</h2>
                                 <p className="text-sm opacity-90 flex items-center gap-2">
-                                    <i className="fas fa-map-marker-alt"></i> {selectedCommunity.type} • {selectedCommunity.members_count.toLocaleString()} Members
+                                    <i className="fas fa-map-marker-alt"></i> {selectedCommunity.type} • {selectedCommunity.members.toLocaleString()} Members
                                 </p>
                             </div>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 md:p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                                {selectedCommunity.description}
-                            </p>
+                        <div className="p-6 md:p-8 space-y-8">
 
-                            {/* Placeholder for Challenges */}
+                            {/* Active Challenge */}
                             <div className="bg-teal-50 dark:bg-teal-900/20 rounded-xl p-5 border border-teal-100 dark:border-teal-800/30">
-                                <h3 className="font-bold text-teal-800 dark:text-teal-300 mb-2">Active Challenges</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Join this community to participate in weekly challenges!</p>
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-2">
+                                        <i className="fas fa-fire text-orange-500"></i> Active Challenge
+                                    </h3>
+                                    <span className="text-xs font-bold bg-white dark:bg-gray-800 text-teal-600 px-2 py-1 rounded shadow-sm">Ends in 3 days</span>
+                                </div>
+                                <p className="text-lg font-bold text-gray-800 dark:text-white mb-2">{selectedCommunity.active_challenge}</p>
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1">
+                                    <div className="bg-teal-500 h-2.5 rounded-full" style={{ width: `${selectedCommunity.challenge_progress}%` }}></div>
+                                </div>
+                                <p className="text-right text-xs text-gray-500 dark:text-gray-400">{selectedCommunity.challenge_progress}% Goal Reached</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Leaderboard */}
+                                <div>
+                                    <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                        <i className="fas fa-medal text-yellow-500"></i> Top Contributors
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {selectedCommunity.leaderboard.map((user, index) => (
+                                            <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'
+                                                        }`}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.name}</span>
+                                                </div>
+                                                <span className="text-sm font-bold text-teal-600 dark:text-teal-400">{user.score}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Discussion Teaser */}
+                                <div>
+                                    <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                                        <i className="fas fa-comments text-blue-500"></i> Latest Discussion
+                                    </h3>
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-blue-200 dark:bg-blue-800 flex-shrink-0"></div>
+                                            <div>
+                                                <p className="text-sm text-gray-800 dark:text-gray-200 font-medium mb-1">"{selectedCommunity.latest_post}"</p>
+                                                <p className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">View 12 replies</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button className="w-full mt-4 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                        View All Discussions
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -285,8 +432,8 @@ const Community = () => {
                                 Close
                             </button>
                             <button
-                                onClick={(e) => handleJoinLeave(e, selectedCommunity, selectedCommunity.is_member ? 'leave' : 'join')}
-                                className={`px-6 py-2 rounded-lg font-bold text-sm shadow-md transition-colors ${selectedCommunity.is_member ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-teal-600 hover:bg-teal-700 text-white'}`}
+                                onClick={(e) => handleJoin(e, selectedCommunity)}
+                                className="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-teal-700 transition-colors"
                             >
                                 {selectedCommunity.is_member ? 'Leave Community' : 'Join Community'}
                             </button>
