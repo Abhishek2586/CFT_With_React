@@ -42,6 +42,32 @@ const StatCard = ({ icon, number, label, suffix = '', colorClass }) => {
 };
 
 const ImpactSection = () => {
+    const [stats, setStats] = useState({
+        users: 0,
+        co2: 0,
+        countries: 0
+    });
+
+    useEffect(() => {
+        const fetchGlobalImpact = async () => {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/global-impact/');
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats({
+                        users: data.total_users,
+                        co2: data.co2_saved_tons,
+                        countries: data.countries_count
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch global impact", error);
+            }
+        };
+
+        fetchGlobalImpact();
+    }, []);
+
     return (
         <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
             <div className="max-w-6xl mx-auto">
@@ -59,7 +85,7 @@ const ImpactSection = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         }
-                        number="15,420"
+                        number={stats.users.toLocaleString()}
                         label="Registered Users"
                         colorClass="bg-blue-100 dark:bg-blue-900"
                     />
@@ -69,7 +95,7 @@ const ImpactSection = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                             </svg>
                         }
-                        number="8,500"
+                        number={stats.co2.toLocaleString()}
                         label="Tons of CO₂ Saved"
                         suffix="+"
                         colorClass="bg-yellow-100 dark:bg-yellow-900"
@@ -80,7 +106,7 @@ const ImpactSection = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         }
-                        number="42"
+                        number={stats.countries.toLocaleString()}
                         label="Countries Represented"
                         colorClass="bg-purple-100 dark:bg-purple-900"
                     />

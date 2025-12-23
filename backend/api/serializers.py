@@ -25,9 +25,32 @@ class UserAchievementSerializer(serializers.ModelSerializer):
         fields = ('id', 'achievement', 'date_earned')
 
 class CommunitySerializer(serializers.ModelSerializer):
+    members_count = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
+
     class Meta:
         model = Community
         fields = '__all__'
+        read_only_fields = ('created_by', 'members', 'total_community_emission', 'created_at')
+
+    def get_members_count(self, obj):
+        return obj.members.count()
+
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.members.filter(id=request.user.id).exists()
+        return False
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Handle image logic: if image exists, use it, else use image_url
+        if instance.image:
+             # Let DRF handle the full URL for the image field
+             pass
+        elif instance.image_url:
+             representation['image'] = instance.image_url
+        return representation
 
 class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:

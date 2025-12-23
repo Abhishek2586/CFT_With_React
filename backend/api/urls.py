@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, LoginView, update_profile_by_email, community_impact_map, LogActivityView, ActivityDetailView, UserDashboardStatsView, UserGamificationStatsView, EnergyForecastView
+from .views import RegisterView, LoginView, update_profile_by_email, community_impact_map, LogActivityView, ActivityDetailView, UserDashboardStatsView, UserGamificationStatsView, EnergyForecastView, LeaderboardView, GlobalImpactView, CommunityListView, CommunityDetailView, CommunityActionView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -10,5 +10,12 @@ urlpatterns = [
     path('log-activity/<int:pk>/', ActivityDetailView.as_view(), name='delete-activity'),
     path('dashboard-stats/', UserDashboardStatsView.as_view(), name='dashboard-stats'),
     path('gamification-stats/', UserGamificationStatsView.as_view(), name='gamification-stats'),
+    path('leaderboard/', LeaderboardView.as_view(), name='leaderboard'),
+    path('global-impact/', GlobalImpactView.as_view(), name='global-impact'),
     path('energy-forecast/', EnergyForecastView.as_view(), name='energy-forecast'),
+    path('communities/', CommunityListView.as_view(), name='community-list'),
+    path('communities/<int:pk>/', CommunityDetailView.as_view(), name='community-detail'),
+    path('communities/<int:pk>/join/', CommunityActionView.as_view(), {'action': 'join'}, name='community-join'),
+    path('communities/<int:pk>/leave/', CommunityActionView.as_view(), {'action': 'leave'}, name='community-leave'),
 ]
+

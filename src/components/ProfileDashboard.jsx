@@ -11,6 +11,10 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
     const [heatmapGrid, setHeatmapGrid] = React.useState([]);
     const [streakStats, setStreakStats] = React.useState({ totalActiveDays: 0, maxStreak: 0 });
 
+    // State for Ranking
+    const [myRanks, setMyRanks] = React.useState({ global: '-', state: '-', city: '-' });
+    const [rankingScope, setRankingScope] = React.useState('city');
+
     const fetchStats = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -44,6 +48,13 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
                     maxStreak: data.activity_heatmap.max_streak
                 });
                 processHeatmapData(data.activity_heatmap.daily_counts);
+            }
+
+            // 3. Leaderboard Ranks
+            const leaderboardRes = await fetch(`http://127.0.0.1:8000/api/leaderboard/${emailParam}`);
+            if (leaderboardRes.ok) {
+                const data = await leaderboardRes.json();
+                setMyRanks(data.my_ranks);
             }
 
         } catch (error) {
@@ -125,12 +136,21 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
                 </div>
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between transition-colors duration-300">
                     <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">Monthly Ranking</p>
-                        <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors"># /</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">
+                            {rankingScope.charAt(0).toUpperCase() + rankingScope.slice(1)} Ranking
+                        </p>
+                        <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors">
+                            #{myRanks[rankingScope] || '-'}
+                        </p>
                     </div>
-                    <select className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-teal-500 dark:focus:border-teal-400 transition-colors">
-                        <option>City</option>
-                        <option>Global</option>
+                    <select
+                        value={rankingScope}
+                        onChange={(e) => setRankingScope(e.target.value)}
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1 text-sm text-gray-600 dark:text-gray-300 outline-none focus:border-teal-500 dark:focus:border-teal-400 transition-colors"
+                    >
+                        <option value="city">City</option>
+                        <option value="state">State</option>
+                        <option value="global">Global</option>
                     </select>
                 </div>
             </div>

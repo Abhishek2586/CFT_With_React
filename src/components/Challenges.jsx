@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '../App';
 
 // --- Dummy Data (Fallback) ---
-const mockChallenges = [
+// --- Dummy Data (Fallback) ---
+export const mockChallenges = [
     {
         id: 1,
         title: "Car-Free Week",
@@ -153,6 +154,12 @@ const Challenges = () => {
     const [activeTab, setActiveTab] = useState('Active');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedChallenge, setSelectedChallenge] = useState(null);
+    const [userStats, setUserStats] = useState({
+        level: 1,
+        xp: 0,
+        nextLevelXp: 1000,
+        activeChallenges: 0
+    });
 
     const { data: challenges = [], isLoading, error } = useQuery({
         queryKey: ['challenges'],
@@ -160,13 +167,28 @@ const Challenges = () => {
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-    // Dummy User Stats for Hero Section
-    const userStats = {
-        level: 5,
-        xp: 2450,
-        nextLevelXp: 3000,
-        activeChallenges: challenges.filter(c => c.status === 'Active').length
-    };
+    // Fetch Gamification Stats
+    React.useEffect(() => {
+        const fetchGamificationStats = async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const emailParam = user.email ? `?email=${user.email}` : '';
+                const response = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setUserStats({
+                        level: data.user_stats.level,
+                        xp: data.user_stats.xp,
+                        nextLevelXp: (data.user_stats.level + 1) * 500, // Assuming simple level up logic for display
+                        activeChallenges: challenges.filter(c => c.status === 'Active').length
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch gamification stats", err);
+            }
+        };
+        fetchGamificationStats();
+    }, [challenges]);
 
     const filteredChallenges = challenges.filter(challenge => {
         const matchesTab = activeTab === 'All' || challenge.status === activeTab;

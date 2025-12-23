@@ -94,6 +94,11 @@ class Community(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_communities')
     members = models.ManyToManyField(User, related_name='joined_communities', blank=True)
     
+    # Assets
+    image = models.ImageField(upload_to='community_images/', null=True, blank=True)
+    image_url = models.URLField(null=True, blank=True, help_text="Fallback or stock image URL")
+    created_at = models.DateTimeField(default=timezone.now)
+
     # Stats
     total_community_emission = models.FloatField(default=0.0)
 
