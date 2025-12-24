@@ -8,17 +8,74 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+
     useEffect(() => {
-        setMode(initialMode);
-        setFormData({ username: '', email: '', password: '' });
-        setError('');
-        setSuccess('');
+        if (isOpen) {
+            setMode(initialMode);
+            setFormData({ username: '', email: '', password: '' });
+            setError('');
+            setSuccess('');
+            setOtp('');
+            setOtpSent(false);
+            setIsVerified(false);
+        }
     }, [initialMode, isOpen]);
 
     if (!isOpen) return null;
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSendOTP = async () => {
+        if (!formData.email) {
+            setError("Please enter your email first.");
+            return;
+        }
+        setError('');
+        try {
+            const res = await fetch('http://127.0.0.1:8000/api/auth/send-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setOtpSent(true);
+                setSuccess("OTP sent to your email!");
+            } else {
+                setError(data.error || "Failed to send OTP.");
+            }
+        } catch (e) {
+            setError("Failed to connect for OTP.");
+        }
+    };
+
+    const handleVerifyOTP = async () => {
+        if (!otp) {
+            setError("Please enter the OTP.");
+            return;
+        }
+        setError('');
+        try {
+            const res = await fetch('http://127.0.0.1:8000/api/auth/verify-otp/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, otp })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsVerified(true);
+                setSuccess("Email verified! You can now sign up.");
+            } else {
+                setError(data.error || "Invalid OTP.");
+            }
+        } catch (e) {
+            setError("Failed to verify OTP.");
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -119,17 +176,53 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                             </div>
                         )}
 
-                        <div>
+                        <div className="relative">
                             <input
                                 type="email"
                                 name="email"
                                 placeholder="Enter email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500"
+                                disabled={isVerified}
+                                className={`w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500 ${isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 required
                             />
+                            {mode === 'register' && !isVerified && formData.email && (
+                                <button
+                                    type="button"
+                                    onClick={handleSendOTP}
+                                    disabled={otpSent}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 rounded transition-colors disabled:opacity-50"
+                                >
+                                    {otpSent ? 'OTP Sent' : 'Send OTP'}
+                                </button>
+                            )}
+                            {isVerified && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                </span>
+                            )}
                         </div>
+
+                        {mode === 'register' && otpSent && !isVerified && (
+                            <div className="flex space-x-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter 4-digit OTP"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                    maxLength={4}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400 outline-none transition-all"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleVerifyOTP}
+                                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                >
+                                    Verify
+                                </button>
+                            </div>
+                        )}
 
                         <div className="relative">
                             <input
@@ -153,7 +246,11 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
                             </div>
                         )}
 
-                        <button type="submit" className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-teal-500/30">
+                        <button
+                            type="submit"
+                            disabled={mode === 'register' && !isVerified}
+                            className={`w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-teal-500/30 ${mode === 'register' && !isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
                             {mode === 'login' ? 'Sign in' : 'Sign up'}
                         </button>
                     </form>

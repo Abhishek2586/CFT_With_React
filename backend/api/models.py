@@ -39,8 +39,20 @@ class Profile(models.Model):
     # 3. Sustainability Score (Gamification)
     sustainability_score = models.IntegerField(default=0, help_text="A normalized score (0-100) indicating user eco-performance.")
 
+    # 4. Email Verification
+    is_email_verified = models.BooleanField(default=False)
+
     def __str__(self):
         return self.profile_name
+
+class EmailVerification(models.Model):
+    email = models.EmailField(unique=True)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.email} - {'Verified' if self.is_verified else 'Pending'}"
 
 # --- Signals (Unchanged) ---
 @receiver(post_save, sender=User)

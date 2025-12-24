@@ -705,3 +705,76 @@ class EnergyForecastView(APIView):
             return Response({'error': str(e)}, status=500)
 
 # Reload trigger
+
+# --- EMAIL VERIFICATION VIEWS ---
+import random
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import EmailVerification
+
+class SendOTPView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=400)
+            
+        # Check if email is already taken by a registered user
+        if User.objects.filter(email=email).exists():
+             return Response({'error': 'Email is already registered. Please login.'}, status=400)
+
+        try:
+            # Generate 4-digit OTP
+            otp = str(random.randint(1000, 9999))
+            
+            # Create or update EmailVerification record
+            verification, created = EmailVerification.objects.update_or_create(
+                email=email,
+                defaults={'otp': otp, 'is_verified': False, 'created_at': timezone.now()}
+            )
+            
+            # Send Email
+            subject = "Your Verification Code - Carbon Tracker"
+            message = f"Hello,\n\nYour OTP for verification is: {otp}\n\nThis code expires in 5 minutes.\n\nThank you,\nCarbon Tracker Team"
+            
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+            
+            return Response({'message': 'OTP sent successfully'})
+            
+        except Exception as e:
+            return Response({'error': f'Failed to send email: {str(e)}'}, status=500)
+
+class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+        
+        if not email or not otp:
+            return Response({'error': 'Email and OTP are required'}, status=400)
+            
+        try:
+            verification = EmailVerification.objects.get(email=email)
+            
+            # Check if OTP matches
+            if verification.otp != otp:
+                return Response({'error': 'Invalid OTP'}, status=400)
+                
+            # Check Expiration (5 minutes)
+            now = timezone.now()
+            time_diff = now - verification.created_at
+            if time_diff.total_seconds() > 300: # 5 minutes
+                return Response({'error': 'OTP has expired'}, status=400)
+                
+            # Success
+            verification.is_verified = True
+            verification.save()
+            
+            return Response({'message': 'Email verified successfully'})
+            
+        except EmailVerification.DoesNotExist:
+            return Response({'error': 'Verification record not found. Please request OTP again.'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
