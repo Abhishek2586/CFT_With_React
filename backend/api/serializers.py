@@ -24,9 +24,22 @@ class UserAchievementSerializer(serializers.ModelSerializer):
         model = UserAchievement
         fields = ('id', 'achievement', 'date_earned')
 
+class ContributorSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True)
+    profile_name = serializers.CharField(source='profile.profile_name', read_only=True)
+    xp = serializers.IntegerField(source='profile.xp', read_only=True)
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'profile_name', 'xp', 'level')
+
 class CommunitySerializer(serializers.ModelSerializer):
     members_count = serializers.SerializerMethodField()
     is_member = serializers.SerializerMethodField()
+    top_contributors = serializers.SerializerMethodField()
+    active_challenge = serializers.SerializerMethodField()
+    challenge_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Community
@@ -54,6 +67,30 @@ class CommunitySerializer(serializers.ModelSerializer):
         if user:
             return obj.members.filter(id=user.id).exists()
         return False
+    
+    def get_top_contributors(self, obj):
+        # Get top 3 members sorted by XP (descending)
+        # We need to join with Profile to sort by xp
+        # Filter profile__isnull=False to avoid crashes if user has no profile
+        top_members = obj.members.filter(profile__isnull=False).select_related('profile').order_by('-profile__xp')[:3]
+        return ContributorSerializer(top_members, many=True).data
+
+    def get_active_challenge(self, obj):
+        from django.utils import timezone
+        today = timezone.now().date()
+        challenge = obj.challenges.filter(end_date__gte=today).first()
+        return challenge.title if challenge else None
+
+    def get_challenge_progress(self, obj):
+        from django.utils import timezone
+        from django.db.models import Sum
+        today = timezone.now().date()
+        challenge = obj.challenges.filter(end_date__gte=today).first()
+        
+        if challenge and challenge.target_value > 0:
+            total_progress = UserChallengeProgress.objects.filter(challenge=challenge).aggregate(Sum('current_value'))['current_value__sum'] or 0
+            return min(int((total_progress / challenge.target_value) * 100), 100)
+        return 0
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

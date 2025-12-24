@@ -366,18 +366,27 @@ const Community = () => {
                         <div className="p-6 md:p-8 space-y-8">
 
                             {/* Active Challenge */}
+                            {/* Active Challenge */}
                             <div className="bg-teal-50 dark:bg-teal-900/20 rounded-xl p-5 border border-teal-100 dark:border-teal-800/30">
                                 <div className="flex justify-between items-center mb-3">
                                     <h3 className="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-2">
                                         <i className="fas fa-fire text-orange-500"></i> Active Challenge
                                     </h3>
-                                    <span className="text-xs font-bold bg-white dark:bg-gray-800 text-teal-600 px-2 py-1 rounded shadow-sm">Ends in 3 days</span>
+                                    {selectedCommunity.active_challenge && (
+                                        <span className="text-xs font-bold bg-white dark:bg-gray-800 text-teal-600 px-2 py-1 rounded shadow-sm">Ongoing</span>
+                                    )}
                                 </div>
-                                <p className="text-lg font-bold text-gray-800 dark:text-white mb-2">{selectedCommunity.active_challenge}</p>
-                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1">
-                                    <div className="bg-teal-500 h-2.5 rounded-full" style={{ width: `${selectedCommunity.challenge_progress}%` }}></div>
-                                </div>
-                                <p className="text-right text-xs text-gray-500 dark:text-gray-400">{selectedCommunity.challenge_progress}% Goal Reached</p>
+                                {selectedCommunity.active_challenge ? (
+                                    <>
+                                        <p className="text-lg font-bold text-gray-800 dark:text-white mb-2">{selectedCommunity.active_challenge}</p>
+                                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1">
+                                            <div className="bg-teal-500 h-2.5 rounded-full" style={{ width: `${selectedCommunity.challenge_progress || 0}%` }}></div>
+                                        </div>
+                                        <p className="text-right text-xs text-gray-500 dark:text-gray-400">{selectedCommunity.challenge_progress || 0}% Goal Reached</p>
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">No active challenge at the moment.</p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -387,18 +396,25 @@ const Community = () => {
                                         <i className="fas fa-medal text-yellow-500"></i> Top Contributors
                                     </h3>
                                     <div className="space-y-3">
-                                        {selectedCommunity.leaderboard.map((user, index) => (
-                                            <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'
-                                                        }`}>
-                                                        {index + 1}
+                                        {selectedCommunity.top_contributors && selectedCommunity.top_contributors.length > 0 ? (
+                                            selectedCommunity.top_contributors.map((user, index) => (
+                                                <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'
+                                                            }`}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.profile_name}</span>
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.name}</span>
+                                                    <div className="text-right">
+                                                        <span className="block text-sm font-bold text-teal-600 dark:text-teal-400">{user.xp} XP</span>
+                                                        <span className="text-xs text-gray-500">Lvl {user.level}</span>
+                                                    </div>
                                                 </div>
-                                                <span className="text-sm font-bold text-teal-600 dark:text-teal-400">{user.score}</span>
-                                            </div>
-                                        ))}
+                                            ))
+                                        ) : (
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 italic">No contributors yet. Be the first!</p>
+                                        )}
                                     </div>
                                 </div>
 
