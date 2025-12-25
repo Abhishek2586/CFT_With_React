@@ -129,20 +129,49 @@ class LogActivityView(generics.ListCreateAPIView):
         return queryset.order_by('-timestamp')
 
     def perform_create(self, serializer):
-        # Calculate Carbon Footprint
+        from .ml_engine import EmissionPredictor
+        
+        # Calculate Carbon Footprint using ML Model
         category = serializer.validated_data.get('category')
         value = serializer.validated_data.get('value')
         
-        emission_factors = {
-            'transport': 0.2,   # kg CO2 per km
-            'energy': 0.85,     # kg CO2 per kWh (Updated)
-            'food': 1.5,        # kg CO2 per serving (Avg)
-            'consumption': 0.05,# kg CO2 per INR (Updated)
-            'waste': 1.2        # kg CO2 per kg (Updated)
-        }
+        # Determine subtype based on category and extra fields
+        # Note: frontend sends these fields in serializer.initial_data or validated_data if defined in serializer
+        # Assuming ActivitySerializer might not explicitly validate 'mode', 'dietType' etc as own fields but stores in JSONField or similar, 
+        # OR we access them from initial_data if not in validated_data.
+        # Let's try to get them from validated_data first, then initial_data fallback.
+        data = serializer.validated_data
         
-        factor = emission_factors.get(category, 0.0)
-        carbon_footprint = value * factor
+        subtype = 'generic' # Default
+        
+        if category == 'transport':
+            subtype = data.get('mode') or self.request.data.get('mode') or 'car-gasoline'
+        elif category == 'energy':
+            subtype = data.get('source') or self.request.data.get('source') or 'electricity-grid'
+        elif category == 'food':
+            # Map dietType to likely subtypes (training data likely used 'vegetarian', 'meat-lover' etc)
+            subtype = data.get('dietType') or self.request.data.get('dietType') or 'vegetarian'
+        elif category == 'consumption':
+            subtype = data.get('purchaseCategory') or self.request.data.get('purchaseCategory') or 'electronics'
+        elif category == 'waste':
+            subtype = data.get('wasteType') or self.request.data.get('wasteType') or 'mixed'
+
+        # Initialize Predictor and Predict
+        predictor = EmissionPredictor()
+        carbon_footprint = predictor.predict(category, subtype, value)
+        
+        if carbon_footprint is None:
+            # --- Fallback to Static Math ---
+            print(f"⚠️ Prediction failed for {category}/{subtype}. Using fallback.")
+            emission_factors = {
+                'transport': 0.2,   
+                'energy': 0.85,     
+                'food': 1.5,        
+                'consumption': 0.05,
+                'waste': 1.2        
+            }
+            factor = emission_factors.get(category, 0.0)
+            carbon_footprint = value * factor
         
         # Handle User Association
         user = self.request.user
