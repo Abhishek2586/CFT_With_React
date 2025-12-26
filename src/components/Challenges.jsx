@@ -173,7 +173,7 @@ const Challenges = () => {
             try {
                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                 const emailParam = user.email ? `?email=${user.email}` : '';
-                const response = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+                const response = await fetch(`https://cft-with-react-backend.onrender.com/api/gamification-stats/${emailParam}`);
                 if (response.ok) {
                     const data = await response.json();
                     setUserStats({

@@ -21,7 +21,7 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
             const emailParam = user.email ? `?email=${user.email}` : '';
 
             // 1. Dashboard Stats
-            const dashboardRes = await fetch(`http://127.0.0.1:8000/api/dashboard-stats/${emailParam}`);
+            const dashboardRes = await fetch(`https://cft-with-react-backend.onrender.com/api/dashboard-stats/${emailParam}`);
             if (dashboardRes.ok) {
                 const data = await dashboardRes.json();
                 setFootprintData(data.trend_data);
@@ -40,7 +40,7 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
             }
 
             // 2. Gamification Stats (Heatmap)
-            const gamificationRes = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+            const gamificationRes = await fetch(`https://cft-with-react-backend.onrender.com/api/gamification-stats/${emailParam}`);
             if (gamificationRes.ok) {
                 const data = await gamificationRes.json();
                 setStreakStats({
@@ -51,7 +51,7 @@ const ProfileDashboard = ({ isDarkMode, onNavigate }) => {
             }
 
             // 3. Leaderboard Ranks
-            const leaderboardRes = await fetch(`http://127.0.0.1:8000/api/leaderboard/${emailParam}`);
+            const leaderboardRes = await fetch(`https://cft-with-react-backend.onrender.com/api/leaderboard/${emailParam}`);
             if (leaderboardRes.ok) {
                 const data = await leaderboardRes.json();
                 setMyRanks(data.my_ranks);

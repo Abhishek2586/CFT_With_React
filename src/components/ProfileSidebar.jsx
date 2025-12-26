@@ -21,7 +21,7 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                 const emailParam = user.email ? `?email=${user.email}` : '';
 
                 // Fetch Dashboard Stats (Budget & Categories)
-                const budgetResponse = await fetch(`http://127.0.0.1:8000/api/dashboard-stats/${emailParam}`);
+                const budgetResponse = await fetch(`https://cft-with-react-backend.onrender.com/api/dashboard-stats/${emailParam}`);
                 if (budgetResponse.ok) {
                     const data = await budgetResponse.json();
                     setBudget(data.budget);
@@ -29,7 +29,7 @@ const ProfileSidebar = ({ user, onUpdateProfile, onNavigate }) => {
                 }
 
                 // Fetch Gamification Stats
-                const gamificationResponse = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+                const gamificationResponse = await fetch(`https://cft-with-react-backend.onrender.com/api/gamification-stats/${emailParam}`);
                 if (gamificationResponse.ok) {
                     const data = await gamificationResponse.json();
                     setGamificationStats(data.user_stats);
