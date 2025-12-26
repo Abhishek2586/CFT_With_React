@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { API_URL } from '../App';
+// import { API_URL } from '../App';
 
 // --- Dummy Fallback Data for UI fields not in backend yet ---
 const fallbackData = {
@@ -23,8 +23,8 @@ const fetchCommunities = async () => {
         const email = JSON.parse(localStorage.getItem('user') || '{}').email;
         // Pass email as query param so backend knows who "I" am for "is_member" field
         const url = email
-            ? `http://127.0.0.1:8000/api/communities/?email=${encodeURIComponent(email)}`
-            : 'http://127.0.0.1:8000/api/communities/';
+            ? `${import.meta.env.VITE_API_URL}/communities/?email=${encodeURIComponent(email)}`
+            : `${import.meta.env.VITE_API_URL}/communities/`;
 
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch communities');
@@ -44,7 +44,7 @@ const joinLeaveCommunity = async ({ id, action }) => {
     console.log(`Attempting to ${action} community ${id} for ${user.email}`);
 
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/communities/${id}/${action}/`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/communities/${id}/${action}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: user.email })

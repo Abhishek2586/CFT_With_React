@@ -37,7 +37,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
         }
         setError('');
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/auth/send-otp/', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/send-otp/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.email })
@@ -61,7 +61,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
         }
         setError('');
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/auth/verify-otp/', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify-otp/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.email, otp })
@@ -84,8 +84,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login', onLoginSuccess }) =
         setSuccess('');
 
         const url = mode === 'login'
-            ? 'http://127.0.0.1:8000/api/login/'
-            : 'http://127.0.0.1:8000/api/register/';
+            ? `${import.meta.env.VITE_API_URL}/login/`
+            : `${import.meta.env.VITE_API_URL}/register/`;
 
         try {
             const response = await fetch(url, {

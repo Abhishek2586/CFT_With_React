@@ -14,7 +14,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout, onNavigate, cur
             if (user) {
                 try {
                     const emailParam = user.email ? `?email=${user.email}` : '';
-                    const response = await fetch(`http://127.0.0.1:8000/api/gamification-stats/${emailParam}`);
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/gamification-stats/${emailParam}`);
                     if (response.ok) {
                         const data = await response.json();
                         setGamificationStats({

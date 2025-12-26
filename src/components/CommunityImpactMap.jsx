@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API_URL } from '../App';
+// import { API_URL } from '../App';
 
 const CommunityImpactMap = () => {
     const [activeTab, setActiveTab] = useState('population');
@@ -11,7 +11,7 @@ const CommunityImpactMap = () => {
         const fetchMap = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${API_URL}/community-impact-map/`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/community-impact-map/`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch map data');
                 }

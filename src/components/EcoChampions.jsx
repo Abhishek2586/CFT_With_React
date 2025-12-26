@@ -8,7 +8,7 @@ const EcoChampions = () => {
     React.useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/leaderboard/');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/leaderboard/`);
                 if (res.ok) {
                     const data = await res.json();
                     setChampions(data.leaderboard); // Fetch all (top 50)

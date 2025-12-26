@@ -28,7 +28,7 @@ const LogActivity = () => {
     const fetchEnergyForecast = async () => {
         setLoadingForecast(true);
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/energy-forecast/');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/energy-forecast/`);
             if (response.ok) {
                 const data = await response.json();
                 setEnergyForecast(data);
@@ -198,7 +198,7 @@ const LogActivity = () => {
         setLoadingHistory(true);
         try {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            let url = 'http://127.0.0.1:8000/api/log-activity/';
+            let url = `${import.meta.env.VITE_API_URL}/log-activity/`;
             const params = new URLSearchParams();
 
             if (user.email) params.append('email', user.email);
@@ -229,7 +229,7 @@ const LogActivity = () => {
         if (!window.confirm('Are you sure you want to delete this activity?')) return;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/log-activity/${id}/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/log-activity/${id}/`, {
                 method: 'DELETE',
             });
 
@@ -310,7 +310,7 @@ const LogActivity = () => {
                 data.email = user.email;
             }
 
-            const response = await fetch('http://127.0.0.1:8000/api/log-activity/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/log-activity/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -363,7 +363,7 @@ const LogActivity = () => {
     const fetchStats = async () => {
         try {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            let url = 'http://127.0.0.1:8000/api/dashboard-stats/';
+            let url = `${import.meta.env.VITE_API_URL}/dashboard-stats/`;
             if (user.email) {
                 url += `?email=${user.email}`;
             }

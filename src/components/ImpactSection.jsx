@@ -51,7 +51,7 @@ const ImpactSection = () => {
     useEffect(() => {
         const fetchGlobalImpact = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/global-impact/');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/global-impact/`);
                 if (res.ok) {
                     const data = await res.json();
                     setStats({

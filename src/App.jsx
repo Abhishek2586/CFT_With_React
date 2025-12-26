@@ -24,7 +24,7 @@ import './App.css'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-export const API_URL = 'http://127.0.0.1:8000/api';
+// export const API_URL = import.meta.env.VITE_API_URL;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,7 +154,7 @@ function App() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/update-profile-by-email/`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/update-profile-by-email/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

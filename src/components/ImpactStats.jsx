@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '../App';
+// import { API_URL } from '../App';
 
 const StatCard = ({ icon, value, unit, label, subLabel, isImprovement, isRank }) => (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-300 flex flex-col items-center text-center group">
@@ -18,7 +18,7 @@ const StatCard = ({ icon, value, unit, label, subLabel, isImprovement, isRank })
 
 const fetchImpactStats = async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    let url = `${API_URL}/dashboard-stats/`;
+    let url = `${import.meta.env.VITE_API_URL}/dashboard-stats/`;
     if (user.email) {
         url += `?email=${user.email}`;
     }

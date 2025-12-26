@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '../App';
+// import { API_URL } from '../App';
 
 const ActivityItem = ({ icon, title, description, impact, color }) => (
     <div className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-teal-100 dark:hover:border-teal-900 hover:shadow-md transition-all duration-300 group">
@@ -24,7 +24,7 @@ const fetchActivities = async () => {
     // Use provided test email or fallback to logged in user
     const email = user.email || 'adityashahil346@gmail.com';
 
-    const response = await fetch(`${API_URL}/log-activity/?email=${email}`);
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/log-activity/?email=${email}`);
     if (!response.ok) {
         throw new Error('Network response was not ok');
     }
