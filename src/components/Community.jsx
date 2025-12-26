@@ -23,8 +23,8 @@ const fetchCommunities = async () => {
         const email = JSON.parse(localStorage.getItem('user') || '{}').email;
         // Pass email as query param so backend knows who "I" am for "is_member" field
         const url = email
-            ? `https://cft-with-react-backend.onrender.com/api/communities/?email=${encodeURIComponent(email)}`
-            : 'https://cft-with-react-backend.onrender.com/api/communities/';
+            ? `http://127.0.0.1:8000/api/communities/?email=${encodeURIComponent(email)}`
+            : 'http://127.0.0.1:8000/api/communities/';
 
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch communities');
@@ -44,7 +44,7 @@ const joinLeaveCommunity = async ({ id, action }) => {
     console.log(`Attempting to ${action} community ${id} for ${user.email}`);
 
     try {
-        const res = await fetch(`https://cft-with-react-backend.onrender.com/api/communities/${id}/${action}/`, {
+        const res = await fetch(`http://127.0.0.1:8000/api/communities/${id}/${action}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: user.email })

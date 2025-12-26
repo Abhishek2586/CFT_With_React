@@ -24,7 +24,7 @@ import './App.css'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-export const API_URL = 'https://cft-with-react-backend.onrender.com/api';
+export const API_URL = 'http://127.0.0.1:8000/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {

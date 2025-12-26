@@ -3,7 +3,7 @@ import requests
 import time
 import json
 
-BASE_URL = "https://cft-with-react-backend.onrender.com/api"
+BASE_URL = "http://127.0.0.1:8000/api"
 
 def test_dashboard_performance():
     print("Testing Dashboard Performance...")

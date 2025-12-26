@@ -51,7 +51,7 @@ const ImpactSection = () => {
     useEffect(() => {
         const fetchGlobalImpact = async () => {
             try {
-                const res = await fetch('https://cft-with-react-backend.onrender.com/api/global-impact/');
+                const res = await fetch('http://127.0.0.1:8000/api/global-impact/');
                 if (res.ok) {
                     const data = await res.json();
                     setStats({

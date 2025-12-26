@@ -1,6 +1,6 @@
 import requests
 
-url = 'https://cft-with-react-backend.onrender.com/api/login/'
+url = 'http://127.0.0.1:8000/api/login/'
 data = {'username': 'header_test_user', 'password': 'password123'}
 
 try:
