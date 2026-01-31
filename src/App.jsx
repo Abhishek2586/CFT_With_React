@@ -20,6 +20,7 @@ import ProfilePage from './components/ProfilePage';
 import Community from './components/Community';
 import Challenges from './components/Challenges';
 import BackgroundAnimation from './components/BackgroundAnimation';
+import EcoBot from './components/EcoBot';
 import './App.css'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -257,13 +258,14 @@ function App() {
           ) : currentPage === 'community' ? (
             <Community />
           ) : currentPage === 'challenges' ? (
-            <Challenges />
+            <Challenges onNavigate={handleNavigate} />
           ) : (
             <ProfilePage user={user} onUpdateProfile={handleUpdateProfile} isDarkMode={isDarkMode} onNavigate={handleNavigate} />
           )}
         </main>
 
         <Footer />
+        <EcoBot onNavigate={handleNavigate} />
       </div >
     </QueryClientProvider>
   );

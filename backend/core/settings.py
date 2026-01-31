@@ -35,7 +35,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://cft-with-react-backend.onrender.com",
+    "https://cfthosting.vercel.app",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -50,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

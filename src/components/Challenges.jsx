@@ -150,7 +150,7 @@ const fetchChallenges = async () => {
     return mockChallenges;
 };
 
-const Challenges = () => {
+const Challenges = ({ onNavigate }) => {
     const [activeTab, setActiveTab] = useState('Active');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedChallenge, setSelectedChallenge] = useState(null);
@@ -364,7 +364,10 @@ const Challenges = () => {
                                 {/* Action Button */}
                                 <div className="mt-4">
                                     {challenge.status === 'Active' ? (
-                                        <button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
+                                        <button
+                                            onClick={() => onNavigate('log-activity')}
+                                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+                                        >
                                             <i className="fas fa-plus-circle"></i> Log Progress
                                         </button>
                                     ) : challenge.status === 'Discover' ? (
@@ -480,7 +483,10 @@ const Challenges = () => {
                                     Join Now
                                 </button>
                             ) : (
-                                <button className="flex-[2] bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition-colors">
+                                <button
+                                    onClick={() => onNavigate('log-activity')}
+                                    className="flex-[2] bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition-colors"
+                                >
                                     Log Activity
                                 </button>
                             )}
